@@ -1,0 +1,6 @@
+/* System fonts keep the entire archive local, including on first launch. */
+@font-face {
+  font-family: "Archive Condensed";
+  src: local("Impact");
+  font-display: swap;
+}

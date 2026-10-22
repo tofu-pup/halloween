@@ -1,0 +1,17 @@
+{
+  "name": "sak-013-blodlopet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first Norwegian Halloween mystery archive",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "check": "node --check app.js && node --check case.config.js && node --check sw.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}
