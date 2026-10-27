@@ -327,15 +327,16 @@ async function startDecryption(token) {
 }
 
 async function typeParagraph(element, text, token) {
+  const characters = Array.from(text);
   element.classList.add("typing");
   if (reducedMotion.matches) {
     element.textContent = text;
-    if (!await delay(Math.max(2500, text.length * config.revelation.characterDelay), token)) return false;
+    if (!await delay(Math.max(2500, characters.length * config.revelation.characterDelay), token)) return false;
   } else {
     // Small batches keep iPad DOM work modest without changing the reading pace.
-    for (let i = 0; i < text.length; i += 3) {
+    for (let i = 0; i < characters.length; i += 3) {
       if (!await delay(config.revelation.characterDelay * 3, token)) return false;
-      element.textContent += text.slice(i, i + 3);
+      element.textContent += characters.slice(i, i + 3).join("");
     }
   }
   element.classList.remove("typing");

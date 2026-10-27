@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { CASE_CONFIG } from "../case.config.js";
 
 const answers = ["  ole VIK  ", "18:42", "Foynland", "  IKKE,   SNU DEG! "];
-const spoilers = ["ole vik", "18.42", "føynland", "ikke snu deg", "ole magnus svanevik"];
+const spoilers = ["ole vik", "18.42", "føynland", "ikke snu deg", "ole magnus svanevik", "🦢"];
 
 async function ready(page) {
   await page.goto("./");
@@ -100,6 +100,12 @@ test("entire timed experience, refresh and reset/replay work in airplane mode", 
   await page.reload();
   await expect(page.locator("#offline-status")).toContainText("KLAR UTEN NETT");
   await solve(page);
+  await page.evaluate(() => {
+    window.__identityFrames = [];
+    const element = document.getElementById("finale-identity");
+    new MutationObserver(() => window.__identityFrames.push(element.textContent))
+      .observe(element, { childList: true, characterData: true, subtree: true });
+  });
   await page.locator("#unlock-case").click();
   await expect(page.locator("#decryption")).toBeVisible();
   await expect(page.locator("#revelation")).toBeVisible({ timeout: 25000 });
@@ -110,11 +116,25 @@ test("entire timed experience, refresh and reset/replay work in airplane mode", 
   await expect(page.locator("#finale")).toBeVisible({ timeout: 90000 });
   await expect(page.locator("#finale-title")).toHaveText("SE BAK DERE");
   await expect(page.locator("#finale-identity")).toBeEmpty();
-  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANEVIK", { timeout: 15000 });
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik + 🦢 = OLE MAGNUS SVANEVIK", { timeout: 15000 });
+  const frames = await page.evaluate(() => window.__identityFrames);
+  expect(frames.some((text) => text.includes("🦢"))).toBe(true);
+  expect(frames.every((text) => text.isWellFormed())).toBe(true);
   await page.screenshot({ path: "test-results/finale-ipad.png", fullPage: true });
+  for (const viewport of [{ width: 1194, height: 834 }, { width: 1024, height: 768 }, { width: 390, height: 844 }, { width: 320, height: 740 }]) {
+    await page.setViewportSize(viewport);
+    const identity = await page.locator("#finale-identity").boundingBox();
+    const heading = await page.locator("#finale-title").boundingBox();
+    expect(identity.x).toBeGreaterThanOrEqual(0);
+    expect(identity.x + identity.width).toBeLessThanOrEqual(viewport.width);
+    expect(identity.y).toBeGreaterThanOrEqual(heading.y + heading.height);
+    expect(identity.y + identity.height).toBeLessThanOrEqual(viewport.height);
+    expect(await page.locator("#finale-identity").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 1194, height: 834 });
   await page.reload();
   await expect(page.locator("#finale")).toBeVisible();
-  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANEVIK");
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik + 🦢 = OLE MAGNUS SVANEVIK");
   await supervisor(page);
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
