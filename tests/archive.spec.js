@@ -188,15 +188,30 @@ test("sound is gesture-activated and works with generated local audio", async ({
 
 test("mobile and iPad layouts fit without horizontal overflow", async ({ page }) => {
   await ready(page);
-  await page.screenshot({ path: "test-results/welcome-ipad.png", fullPage: true });
-  for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1194, height: 834 }, { width: 1024, height: 768 }]) {
+  await page.screenshot({ path: "test-results/welcome-ipad.png", fullPage: true, animations: "disabled" });
+  for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1194, height: 834 }, { width: 1024, height: 768 }, { width: 1366, height: 1024 }]) {
     await page.setViewportSize(viewport);
-    if (viewport.width === 390) await page.screenshot({ path: "test-results/welcome-mobile.png", fullPage: true });
+    if (viewport.width === 390) await page.screenshot({ path: "test-results/welcome-mobile.png", fullPage: true, animations: "disabled" });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const action = await page.locator("#open-case").boundingBox();
+    expect(action.height).toBeGreaterThanOrEqual(88);
+    const fontSize = (selector) => page.locator(selector).first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    expect(await fontSize("#open-case")).toBeGreaterThanOrEqual(viewport.width >= 900 ? 28 : 22);
+    expect(await fontSize(".hero-description")).toBeGreaterThanOrEqual(21);
+    expect(await fontSize(".hero-lead")).toBeGreaterThanOrEqual(28);
+    if (viewport.width >= 900) {
+      expect(action.y + action.height).toBeLessThanOrEqual(viewport.height - 44);
+      const evidence = await page.locator(".evidence-board").boundingBox();
+      expect(evidence.width).toBeLessThan(action.width);
+      expect(evidence.width).toBeLessThan(390);
+    }
     await page.locator("#open-case").click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await fontSize(".clue-card label")).toBeGreaterThanOrEqual(24);
+    expect(await fontSize(".answer-row button")).toBeGreaterThanOrEqual(18);
     const input = await page.locator("#answer-0").boundingBox();
-    expect(input.height).toBeGreaterThanOrEqual(44);
+    expect(input.height).toBeGreaterThanOrEqual(60);
+    if (viewport.width === 1194) await page.screenshot({ path: "test-results/investigation-ipad.png", fullPage: true, animations: "disabled" });
     await supervisor(page);
     await page.locator("#request-reset").click();
     await page.locator("#confirm-reset").click();
