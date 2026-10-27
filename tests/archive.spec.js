@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { CASE_CONFIG } from "../case.config.js";
 
 const answers = ["  ole VIK  ", "18:42", "Foynland", "  IKKE,   SNU DEG! "];
-const spoilers = ["ole vik", "18.42", "føynland", "ikke snu deg", "ole magnus svanvik"];
+const spoilers = ["ole vik", "18.42", "føynland", "ikke snu deg", "ole magnus svanevik"];
 
 async function ready(page) {
   await page.goto("./");
@@ -80,7 +80,7 @@ test("accepts Norwegian variants, rejects wrong and empty answers, preserves dra
       ["IKKE SNU DEG", "ikke snu deg", "  IKKE   SNU   DEG! ", "«Ikke snu deg.»", "IKKE—SNU—DEG", "IKKE,\nSNU\tDEG!!!"],
     ];
     const wrong = [
-      ["13", "Ole", "Ole Vin", "Ole Magnus Svanvik"],
+      ["13", "Ole", "Ole Vin", "Ole Magnus Svanevik"],
       ["18.43", "18:24", "184", "18/42", "18 42", "1842!"],
       ["broen", "Foynlan", "Nøtterøy"],
       ["SNU DEG", "IKKE SNU DERE", "IKKE"],
@@ -104,17 +104,17 @@ test("entire timed experience, refresh and reset/replay work in airplane mode", 
   await expect(page.locator("#decryption")).toBeVisible();
   await expect(page.locator("#revelation")).toBeVisible({ timeout: 25000 });
   await expect(page.locator("#finale-identity")).toBeEmpty();
-  await expect(page.locator("body")).not.toContainText("OLE MAGNUS SVANVIK");
+  await expect(page.locator("body")).not.toContainText("OLE MAGNUS SVANEVIK");
   await expect(page.locator(".person-record dd")).toHaveText(["OLE VIK", "13", "31.10.2001", "FORSVUNNET"], { timeout: 20000 });
   await expect(page.locator("#identity-connection p").last()).toHaveText("NY IDENTITET FUNNET", { timeout: 15000 });
   await expect(page.locator("#finale")).toBeVisible({ timeout: 90000 });
   await expect(page.locator("#finale-title")).toHaveText("SE BAK DERE");
   await expect(page.locator("#finale-identity")).toBeEmpty();
-  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANVIK", { timeout: 15000 });
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANEVIK", { timeout: 15000 });
   await page.screenshot({ path: "test-results/finale-ipad.png", fullPage: true });
   await page.reload();
   await expect(page.locator("#finale")).toBeVisible();
-  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANVIK");
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANEVIK");
   await supervisor(page);
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
@@ -183,15 +183,51 @@ test("two-second case-number hold opens discreet adult controls", async ({ page 
   await expect(page.locator("#supervisor-dialog")).toBeVisible();
 });
 
+test("Safari audio session is configured before gesture-activated startup", async ({ page }) => {
+  await page.addInitScript(() => {
+    // Windows Playwright WebKit has no Web Audio; this checks startup ordering.
+    const events = [];
+    window.__audioStartup = events;
+    let type = "auto";
+    Object.defineProperty(navigator, "audioSession", {
+      value: {
+        get type() { return type; },
+        set type(value) { type = value; events.push(["session", value]); },
+      },
+    });
+    window.AudioContext = class {
+      constructor() {
+        this.state = "suspended";
+        this.destination = {};
+        events.push(["context", type]);
+      }
+      createGain() { return { connect() {}, gain: { setValueAtTime() {} } }; }
+      addEventListener() {}
+      resume() {
+        events.push(["resume", type]);
+        return new Promise(() => {});
+      }
+    };
+  });
+  await ready(page);
+  expect(await page.evaluate(() => window.__audioStartup)).toEqual([]);
+  await page.locator("#open-case").click();
+  await expect(page.locator("#investigation")).toBeVisible();
+  expect(await page.evaluate(() => window.__audioStartup)).toEqual([
+    ["session", "playback"], ["context", "playback"], ["resume", "playback"],
+  ]);
+});
+
 test("dark sound is enabled by default on the first gesture and works offline without a toggle", async ({ page, context }) => {
   await page.addInitScript(() => {
+    if (!navigator.audioSession) Object.defineProperty(navigator, "audioSession", { value: { type: "auto" } });
     const NativeAudioContext = window.AudioContext;
     window.AudioContext = class extends NativeAudioContext {
       constructor(...args) {
         super(...args);
         const analyser = this.createAnalyser();
         analyser.fftSize = 2048;
-        const probe = { context: this, analyser, master: null, voices: 0, peakRms: 0, midrangePeak: -Infinity };
+        const probe = { context: this, analyser, master: null, voices: 0, peakRms: 0, midrangePeak: -Infinity, sessionType: navigator.audioSession.type };
         window.__soundProbe = probe;
         const samples = new Float32Array(analyser.fftSize);
         const spectrum = new Float32Array(analyser.frequencyBinCount);
@@ -241,6 +277,7 @@ test("dark sound is enabled by default on the first gesture and works offline wi
     return { peakRms: probe.peakRms, midrangePeak: probe.midrangePeak, state: probe.context.state };
   });
   expect(signal.state).toBe("running");
+  expect(await page.evaluate(() => window.__soundProbe.sessionType)).toBe("playback");
   expect(signal.peakRms).toBeGreaterThan(.02);
   expect(signal.midrangePeak).toBeGreaterThan(-35);
   expect(await page.evaluate(() => window.__soundProbe.voices)).toBe(3);
@@ -275,6 +312,31 @@ test("audio startup failure reports the problem without blocking clue entry", as
   await expect(page.locator("#notice")).toContainText("Lyd kunne ikke startes");
   await expect(page.locator("#investigation")).toBeVisible();
   await expect(page.locator("#answer-0")).toBeEditable();
+});
+
+test("audio startup timeout releases the pending attempt and retries on the next tap", async ({ page }) => {
+  await page.addInitScript(() => {
+    const resume = AudioContext.prototype.resume;
+    window.__resumeAttempts = 0;
+    AudioContext.prototype.resume = function () {
+      window.__resumeAttempts++;
+      window.__audioContext = this;
+      if (window.__resumeAttempts === 1) return new Promise(() => {});
+      return resume.call(this);
+    };
+  });
+  await ready(page);
+  await page.clock.install();
+  await page.locator("#open-case").click();
+  await expect(page.locator("#investigation")).toBeVisible();
+  await page.clock.fastForward(4100);
+  await expect(page.locator("#notice")).toContainText("Lyd kunne ikke startes");
+  await page.locator("#answer-0").click();
+  await expect.poll(() => page.evaluate(() => window.__resumeAttempts)).toBe(2);
+  await expect.poll(() => page.evaluate(() => window.__audioContext.state)).toBe("running");
+  await page.locator("#answer-0").fill(answers[0]);
+  await page.locator(".clue-card").first().getByRole("button").click();
+  await expect(page.locator("#solved-count")).toHaveText("1");
 });
 
 test("mobile and iPad layouts fit without horizontal overflow", async ({ page }) => {

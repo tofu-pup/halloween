@@ -6,7 +6,7 @@ En norsk, mobiltilpasset Halloween-finale for 7. trinn. Fire spor åpner en grad
 
 31. oktober 2001 startet 67 elever i Broløpet. Bare 66 kom i mål. Løpet ble stanset frem til 2024. Etter gjenåpningen ble det meldt om uforklarlige skritt, en enslig løper og banking fra et forlatt hus. Da huset ble revet i oktober 2026, meldte arbeidere om urovekkende hendelser. Etterforskningen ble gjenåpnet.
 
-Den savnede var Ole Vik, startnummer 13. Sluttskjermen avslører at han nå er Ole Magnus Svanvik, elevenes lærer. **Hvordan eller hvorfor han forsvant og kom tilbake forklares ikke.** Elevene undersøker fire poster langs den vanlige Broløpet-løypa før de bruker appen ved mål.
+Den savnede var Ole Vik, startnummer 13. Sluttskjermen avslører at han nå er Ole Magnus Svanevik, elevenes lærer. **Hvordan eller hvorfor han forsvant og kom tilbake forklares ikke.** Elevene undersøker fire poster langs den vanlige Broløpet-løypa før de bruker appen ved mål.
 
 **Hele opplevelsen er statisk og lokal.** Ingen backend, innlogging, analyseverktøy, eksterne skrifter, API-er eller CDN-er. Alle bilder og illustrasjoner ligger lokalt i `assets`. Lydene genereres på enheten med Web Audio, så ingen lydfiler eller nettverk trengs. Det er ingen tilfeldig historie eller innhold som avhenger av datoen.
 
@@ -43,7 +43,7 @@ Store/små bokstaver og innledende/avsluttende mellomrom ignoreres. Navn, øynav
 
 Behold nøyaktig fire spor. `revelation.fields` inneholder personopplysningene, `connection` de tre nye opplysningene og `identity` den endelige identiteten. Ingen av disse settes inn i dokumentet før alle fire svar er godkjent. `decryption` styrer de faste meldingene i dekrypteringen. Alle tider er i millisekunder. `characterDelay`, `paragraphPause`, `finalHold` og `warningDuration` styrer lesetempo og siste pause. `identityDelay` er pausen fra «SE BAK DERE» til identiteten begynner å skrives inn. Ved redusert bevegelse vises hver opplysning uten skriveanimasjon, med lesetid.
 
-**Ved innholdsendring:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v5`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stil- og lydendringer beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
+**Ved endringer som gjør lagrede svar ugyldige:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v6`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stil-, lyd- og skrivefeilrettinger beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
 
 Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninger før de er verifisert, men et fullstendig statisk, frakoblet spill kan ikke skjule løsninger fra noen som undersøker kildekoden, nettleserens lagring eller denne offentlige README-en. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Det leverte bildet av broen ligger i `assets/bridge.png` og lagres for frakoblet bruk. Det er en arkiv-inspirert illustrasjon, ikke et historisk foto eller dokumentasjon på siste observasjonssted. Den leverte politilogoen ligger lokalt i `assets/police-logo.png`, brukes i toppfelt og saksfil og lagres for frakoblet bruk.
 
@@ -53,7 +53,7 @@ Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninge
 2. Trykk **Tilsyn** nederst, eller hold saksnummeret **013** øverst til venstre inne i omtrent to sekunder. Avtal timingen med den utkledde voksne.
 3. For presis timing, velg **Styr siste beskjed manuelt** før gruppen starter. Rapporten blir stående til den ansvarlige åpner Tilsyn og trykker **Vis siste beskjed**. Dette valget beholdes mellom grupper.
 4. Gruppen åpner saksmappen og bekrefter de fire svarene. Først etter alle fire riktige vises **ÅPNE SLUTTRAPPORTEN**. Det separate trykket gir den voksne tid til å gjøre seg klar.
-5. Etter **ALLE FIRE SPOR BEKREFTET / SAK 013 – TILGANG GODKJENT** følger ca. 15,5 sekunder dekryptering. Deretter åpnes **KONFIDENSIELT – SAK 013 / SAVNET PERSON** med navn, startnummer, dato og status. **NYE OPPLYSNINGER – 2026 / OLE VIK / NY IDENTITET FUNNET** skrives frem. Etter lesepausen fyller **SE BAK DERE** skjermen – dette er signalet til læreren. Etter 2,5 sekunder begynner **Ole Vik = OLE MAGNUS SVANVIK** å skrives inn under beskjeden. Begge blir stående til nullstilling. Avtal aldri skremmen utelukkende etter en stoppeklokke.
+5. Etter **ALLE FIRE SPOR BEKREFTET / SAK 013 – TILGANG GODKJENT** følger ca. 15,5 sekunder dekryptering. Deretter åpnes **KONFIDENSIELT – SAK 013 / SAVNET PERSON** med navn, startnummer, dato og status. **NYE OPPLYSNINGER – 2026 / OLE VIK / NY IDENTITET FUNNET** skrives frem. Etter lesepausen fyller **SE BAK DERE** skjermen – dette er signalet til læreren. Etter 2,5 sekunder begynner **Ole Vik = OLE MAGNUS SVANEVIK** å skrives inn under beskjeden. Begge blir stående til nullstilling. Avtal aldri skremmen utelukkende etter en stoppeklokke.
 
 Tilsynsdialogen **setter tidsforløpet på pause** mens den er åpen. **Hopp over animasjonen** går fra dekryptering til rapport, eller viser hele rapporten umiddelbart hvis rapporten allerede er åpen. Knappen hopper aldri direkte til skremmebeskjeden; bruk **Vis siste beskjed** for det. Disse kontrollene er deaktivert før alle fire svar er godkjent.
 
@@ -61,7 +61,7 @@ Ved bytte til en annen app/fane stopper tidsforløpet og lyd dempes. Når siden 
 
 Still iPad-volumet til et behagelig nivå før dere åpner saksmappen. Bruk enhetens volumknapper for å justere eller dempe lyd; appen har ingen lydknapp. Ingen raske strobelys brukes; reduserte bevegelsesinnstillinger respekteres. Tilpass skremmen til elevgruppen og la elever kunne stå over.
 
-**Ingen lydeffekt ved åpning?** Kontroller medievolumet, slå av lydløsmodus i Kontrollsenter og sjekk at lyden ikke sendes til hodetelefoner/Bluetooth. Safari kan dempe Web Audio i lydløsmodus; appen kan ikke lese maskinvarens demping eller garantere lyd på enheten. Effektene bruker langsomme anslag, filtrerte overtoner, svake svevninger og en mollklang, uten tilfeldig variasjon. Hvis nettleseren setter lydmotoren på pause, fortsetter lyd automatisk ved neste trykk. Oppstartfeil vises som en melding, men blokkerer aldri spillet. Hele historien fungerer uten lyd.
+**Ingen lydeffekt ved åpning?** Kontroller medievolumet og sjekk at lyden ikke sendes til hodetelefoner/Bluetooth. På Safari 17 og nyere ber appen om `navigator.audioSession.type = "playback"` før lydmotoren starter. Det bruker mediekanalen i stedet for den vanlige «ambient»-kanalen, som iOS kan dempe i lydløsmodus ([WebKit-forklaring](https://bugs.webkit.org/show_bug.cgi?id=237322)). På eldre Safari uten denne funksjonen må lydløsmodus være av. Appen kan ikke lese enhetens volum eller bekrefte at høyttaleren faktisk spiller. Effektene bruker langsomme anslag, filtrerte overtoner, svake svevninger og en mollklang, uten tilfeldig variasjon. Hvis nettleseren setter lydmotoren på pause, fortsetter lyd automatisk ved neste trykk. En lydoppstart som ikke fullføres innen fire sekunder avbrytes med en melding og forsøkes igjen ved neste trykk. Oppstartfeil blokkerer aldri spillet. Hele historien fungerer uten lyd.
 
 ## Nullstilling mellom grupper
 
@@ -94,9 +94,9 @@ Spillet krever ingen bygging eller npm-avhengigheter. Playwright brukes bare til
 
 ```sh
 npm install
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run check
 npm test
 ```
 
-Testene kjører mot samme `/halloween/`-sti som Pages. De dekker lokal hurtigbuffer, frakoblet gjennomspilling og replay, svarnormalisering, feil svar, oppdatering, nullstilling, voksenstyrt finale, lyd, redusert bevegelse, lagringsfeil og mobil-/iPad-bredder. Testserveren starter automatisk. For å regenerere de inkluderte PNG-ikonene: `npm run generate:icons`.
+Testene kjører mot samme `/halloween/`-sti som Pages. De dekker lokal hurtigbuffer, frakoblet gjennomspilling og replay, svarnormalisering, feil svar, oppdatering, nullstilling, voksenstyrt finale, lyd, redusert bevegelse, lagringsfeil og mobil-/iPad-bredder. Chromium-testene måler det faktiske lydsignalet og dekker avbrudd og ny oppstart. En separat oppstartstest i Chromium og WebKit kontrollerer at mediekanalen velges før lydmotoren opprettes, med et simulert lyd-API: Windows-utgaven av Playwright WebKit har ikke Web Audio. Dette erstatter ikke testing av faktisk lyd på iPhone/iPad. Testserveren starter automatisk. For å regenerere de inkluderte PNG-ikonene: `npm run generate:icons`.

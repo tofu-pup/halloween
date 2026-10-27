@@ -136,7 +136,10 @@ async function activateSound() {
   if (audioReady && audioContext?.state === "running") return true;
   if (audioStarting) return audioStarting;
   audioStarting = (async () => {
+    let timeout;
     try {
+      // iOS otherwise uses the ambient channel, which Silent Mode can mute.
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
       if (!audioContext || audioContext.state === "closed") {
         const Audio = window.AudioContext || window.webkitAudioContext;
         if (!Audio) throw new Error("Web Audio støttes ikke.");
@@ -145,7 +148,12 @@ async function activateSound() {
         masterGain.connect(audioContext.destination);
         audioContext.addEventListener("statechange", checkSoundState);
       }
-      await audioContext.resume();
+      await Promise.race([
+        audioContext.resume(),
+        new Promise((_, reject) => {
+          timeout = setTimeout(() => reject(new Error("Lydoppstart tok for lang tid.")), 4000);
+        }),
+      ]);
       if (audioContext.state !== "running") throw new Error("Lyd ble ikke aktivert.");
       audioReady = true;
       masterGain.gain.setValueAtTime(.8, audioContext.currentTime);
@@ -155,6 +163,8 @@ async function activateSound() {
       console.warn("SAK 013: Lyd kunne ikke startes.", error);
       showNotice("Lyd kunne ikke startes. Den forsøkes startet ved neste trykk. Historien fungerer også uten lyd.");
       return false;
+    } finally {
+      clearTimeout(timeout);
     }
   })();
   try { return await audioStarting; }

@@ -57,6 +57,6 @@ export const CASE_CONFIG = {
     warning: "KOBLING BEKREFTET",
     warningDuration: 2500,
     identityDelay: 2500,
-    identity: "Ole Vik = OLE MAGNUS SVANVIK",
+    identity: "Ole Vik = OLE MAGNUS SVANEVIK",
   },
 };
