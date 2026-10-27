@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { CASE_CONFIG } from "../case.config.js";
 
-const answers = ["013", "PÅ BRUA", "nøkel", "VENT!"];
+const answers = ["  ole VIK  ", "18:42", "Foynland", "  IKKE,   SNU DEG! "];
+const spoilers = ["ole vik", "18.42", "føynland", "ikke snu deg", "ole magnus svanvik"];
 
 async function ready(page) {
   await page.goto("./");
@@ -26,7 +28,7 @@ test("archive loads with only local assets and caches the complete /halloween/ a
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("request", (request) => requests.push(request.url()));
   await ready(page);
-  await expect(page).toHaveTitle("SAK 013 – Blodløpet");
+  await expect(page).toHaveTitle("BLODLØPET – SAK 013");
   await expect(page.locator("html")).toHaveAttribute("lang", "nb");
   expect(requests.every((url) => url.startsWith("http://127.0.0.1:4187/halloween/"))).toBe(true);
   expect(errors).toEqual([]);
@@ -34,9 +36,12 @@ test("archive loads with only local assets and caches the complete /halloween/ a
     const key = (await caches.keys()).find((name) => name.startsWith("sak013-"));
     return (await (await caches.open(key)).keys()).map((entry) => new URL(entry.url).pathname);
   });
-  expect(cache).toHaveLength(13);
+  expect(cache).toHaveLength(14);
   expect(cache).toContain("/halloween/case.config.js");
   expect(cache).toContain("/halloween/assets/icon-512.png");
+  expect(cache).toContain("/halloween/assets/police-logo.png");
+  await expect(page.locator(".masthead .police-logo")).toBeVisible();
+  expect(await page.locator(".masthead .police-logo").evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
 });
 
 test("accepts Norwegian variants, rejects wrong and empty answers, preserves drafts and progress", async ({ page }) => {
@@ -47,25 +52,37 @@ test("accepts Norwegian variants, rejects wrong and empty answers, preserves dra
   await page.locator("#answer-0").fill("14");
   await page.locator(".clue-card").first().getByRole("button").click();
   await expect(page.locator("#answer-0")).toHaveAttribute("aria-invalid", "true");
-  await page.locator("#answer-0").fill(" TRETTEN ");
+  await expect(page.locator("#feedback-0")).toHaveText("Opplysningene stemmer ikke med arkivet. Undersøk sporene på nytt.");
+  await page.locator("#answer-0").fill(" Ole Vik ");
   await page.locator(".clue-card").first().getByRole("button").click();
   await page.locator("#answer-1").fill("notat som ikke er sendt");
   await page.reload();
   await expect(page.locator("#investigation")).toBeVisible();
   await expect(page.locator("#solved-count")).toHaveText("1");
   await expect(page.locator("#answer-0")).toHaveAttribute("readonly", "");
+  await expect(page.locator("#answer-0")).toHaveAttribute("type", "password");
   await expect(page.locator("#answer-1")).toHaveValue("notat som ikke er sendt");
   await expect(page.locator("#unlock-ready")).toBeHidden();
   expect(await page.evaluate(async () => {
     const { acceptsAnswer } = await import("./app.js");
     const { CASE_CONFIG } = await import("./case.config.js");
-    return [
-      acceptsAnswer("NOE HELT ANNET", CASE_CONFIG.clues[2]),
-      acceptsAnswer("nøkel", CASE_CONFIG.clues[2]),
-      acceptsAnswer("NØKKELEN", CASE_CONFIG.clues[2]),
-      acceptsAnswer("PAA BRUA", CASE_CONFIG.clues[1]),
+    const variants = [
+      ["Ole Vik", "  OLE VIK  ", "ole   vik"],
+      ["18.42", "18:42", "1842", " 18.42 "],
+      ["Føynland", "Foynland", " FØYNLAND "],
+      ["IKKE SNU DEG", "ikke snu deg", "  IKKE   SNU   DEG! ", "«Ikke snu deg.»", "IKKE—SNU—DEG", "IKKE,\nSNU\tDEG!!!"],
     ];
-  })).toEqual([false, true, true, true]);
+    const wrong = [
+      ["13", "Ole", "Ole Vin", "Ole Magnus Svanvik"],
+      ["18.43", "18:24", "184", "18/42", "18 42", "1842!"],
+      ["broen", "Foynlan", "Nøtterøy"],
+      ["SNU DEG", "IKKE SNU DERE", "IKKE"],
+    ];
+    return {
+      accepted: variants.every((values, i) => values.every((value) => acceptsAnswer(value, CASE_CONFIG.clues[i]))),
+      rejected: wrong.every((values, i) => values.every((value) => !acceptsAnswer(value, CASE_CONFIG.clues[i]))),
+    };
+  })).toEqual({ accepted: true, rejected: true });
 });
 
 test("entire timed experience, refresh and reset/replay work in airplane mode", async ({ page, context }) => {
@@ -79,10 +96,18 @@ test("entire timed experience, refresh and reset/replay work in airplane mode", 
   await page.locator("#unlock-case").click();
   await expect(page.locator("#decryption")).toBeVisible();
   await expect(page.locator("#revelation")).toBeVisible({ timeout: 25000 });
+  await expect(page.locator("#finale-identity")).toBeEmpty();
+  await expect(page.locator("body")).not.toContainText("OLE MAGNUS SVANVIK");
+  await expect(page.locator(".person-record dd")).toHaveText(["OLE VIK", "13", "31.10.2001", "FORSVUNNET"], { timeout: 20000 });
+  await expect(page.locator("#identity-connection p").last()).toHaveText("NY IDENTITET FUNNET", { timeout: 15000 });
   await expect(page.locator("#finale")).toBeVisible({ timeout: 90000 });
-  await expect(page.locator("#finale-title")).toHaveText("SE BAK DERE.");
+  await expect(page.locator("#finale-title")).toHaveText("SE BAK DERE");
+  await expect(page.locator("#finale-identity")).toBeEmpty();
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANVIK", { timeout: 15000 });
+  await page.screenshot({ path: "test-results/finale-ipad.png", fullPage: true });
   await page.reload();
   await expect(page.locator("#finale")).toBeVisible();
+  await expect(page.locator("#finale-identity")).toHaveText("Ole Vik = OLE MAGNUS SVANVIK");
   await supervisor(page);
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
@@ -114,7 +139,12 @@ test("adult controls pause the sequence, skip safely, hold the final cue and res
   await page.locator("#skip-animation").click();
   await page.clock.runFor(120000);
   await expect(page.locator("#revelation")).toBeVisible();
-  await expect(page.locator("#story-text p")).toHaveCount(4);
+  await expect(page.locator(".person-record > div")).toHaveCount(4);
+  await expect(page.locator(".person-record dd")).toHaveText(["OLE VIK", "13", "31.10.2001", "FORSVUNNET"]);
+  await expect(page.locator("#revelation")).toContainText("KONFIDENSIELT – SAK 013");
+  await expect(page.locator("#revelation-title")).toHaveText("SAVNET PERSON");
+  await expect(page.locator("#identity-connection p")).toHaveText(["NYE OPPLYSNINGER – 2026", "OLE VIK", "NY IDENTITET FUNNET"]);
+  await page.screenshot({ path: "test-results/case-file-ipad.png", fullPage: true });
   await supervisor(page);
   await page.locator("#show-finale").click();
   await expect(page.locator("#finale")).toBeVisible();
@@ -125,6 +155,11 @@ test("adult controls pause the sequence, skip safely, hold the final cue and res
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
   await expect(page.locator("#welcome")).toBeVisible();
+  await expect(page.locator("#finale-identity")).toBeEmpty();
+  await expect(page.locator("#story-text")).toBeEmpty();
+  await expect(page.locator("#identity-connection")).toBeEmpty();
+  await page.clock.runFor(10000);
+  await expect(page.locator("#finale-identity")).toBeEmpty();
   await page.locator("#open-case").click();
   await expect(page.locator("#solved-count")).toHaveText("0");
   for (let i = 0; i < 4; i++) await expect(page.locator(`#answer-${i}`)).toHaveValue("");
@@ -189,6 +224,69 @@ test("reduced motion retains the story and the adult-controlled ending", async (
   await page.locator("#unlock-case").click();
   await page.clock.runFor(16000);
   await page.clock.runFor(100000);
-  await expect(page.locator("#story-text p")).toHaveCount(4);
+  await expect(page.locator(".person-record > div")).toHaveCount(4);
+  await expect(page.locator("#identity-connection p")).toHaveCount(3);
   await expect(page.locator("#revelation")).toBeVisible();
+});
+
+test("no solutions are supplied before all four posts are verified and every entry path is gated", async ({ page }) => {
+  await ready(page);
+  const noSpoilers = async () => {
+    const content = (await page.locator("body").textContent()).toLocaleLowerCase("nb-NO");
+    for (const spoiler of spoilers) expect(content).not.toContain(spoiler);
+    await expect(page.locator("#revelation")).toBeHidden();
+    await expect(page.locator("#finale")).toBeHidden();
+  };
+  await noSpoilers();
+  await supervisor(page);
+  await expect(page.locator("#skip-animation")).toBeDisabled();
+  await expect(page.locator("#show-finale")).toBeDisabled();
+  await page.locator("#supervisor-close").click();
+  await page.locator("#open-case").click();
+  for (let i = 0; i < 4; i++) {
+    await page.locator(`#answer-${i}`).fill("ukjent");
+    await page.locator(".clue-card").nth(i).getByRole("button").click();
+    await expect(page.locator(`#feedback-${i}`)).toHaveText("Opplysningene stemmer ikke med arkivet. Undersøk sporene på nytt.");
+    await noSpoilers();
+    await expect(page.locator("#unlock-ready")).toBeHidden();
+    if (i < 3) {
+      await page.locator(`#answer-${i}`).fill(answers[i]);
+      await page.locator(".clue-card").nth(i).getByRole("button").click();
+      await expect(page.locator(`#answer-${i}`)).toHaveAttribute("type", "password");
+    }
+  }
+  await page.locator("#unlock-case").evaluate((button) => button.click());
+  await expect(page.locator("#investigation")).toBeVisible();
+  await noSpoilers();
+  await page.locator("#answer-3").fill(answers[3]);
+  await page.locator(".clue-card").nth(3).getByRole("button").click();
+  await expect(page.locator("#unlock-ready")).toContainText("ALLE FIRE SPOR BEKREFTET");
+  await expect(page.locator("#unlock-ready")).toContainText("SAK 013 – TILGANG GODKJENT");
+  await page.locator("#unlock-case").click();
+  await expect(page.locator("#decryption")).toBeVisible();
+});
+
+test("old-story progress starts a fresh investigation", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("sak013.progress.v1", JSON.stringify({
+      revision: "placeholder-1", screen: "finale", answers: ["13", "brua", "nokkel", "vent"], drafts: ["", "", "", ""],
+    }));
+  });
+  await ready(page);
+  await expect(page.locator("#welcome")).toBeVisible();
+  await expect(page.locator("#solved-count")).toHaveText("0");
+});
+
+test("incomplete saved finale state cannot expose the secret file", async ({ page }) => {
+  await page.addInitScript((revision) => {
+    localStorage.setItem("sak013.progress.v1", JSON.stringify({
+      revision, screen: "finale", answers: ["Ole Vik", "", "", ""], drafts: ["", "", "", ""], identityRevealed: true,
+    }));
+  }, CASE_CONFIG.revision);
+  await ready(page);
+  await expect(page.locator("#investigation")).toBeVisible();
+  await expect(page.locator("#solved-count")).toHaveText("1");
+  await expect(page.locator("#revelation")).toBeHidden();
+  await expect(page.locator("#finale")).toBeHidden();
+  await expect(page.locator("#finale-identity")).toBeEmpty();
 });

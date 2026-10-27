@@ -1,6 +1,12 @@
-# SAK 013 – Blodløpet
+# BLODLØPET – SAK 013
 
 En norsk, mobiltilpasset Halloween-finale for 7. trinn. Fire spor åpner en gradert saksmappe om deltakeren som forsvant fra Broløpet i 2001. Laget for iPad i liggende format, men fungerer også på telefon og datamaskin.
+
+## Historien (kun for arrangører – inneholder løsningen)
+
+31. oktober 2001 startet 67 elever i Broløpet. Bare 66 kom i mål. Løpet ble stanset frem til 2024. Etter gjenåpningen ble det meldt om uforklarlige skritt, en enslig løper og banking fra et forlatt hus. Da huset ble revet i oktober 2026, meldte arbeidere om urovekkende hendelser. Etterforskningen ble gjenåpnet.
+
+Den savnede var Ole Vik, startnummer 13. Sluttskjermen avslører at han nå er Ole Magnus Svanvik, elevenes lærer. **Hvordan eller hvorfor han forsvant og kom tilbake forklares ikke.** Elevene undersøker fire poster langs den vanlige Broløpet-løypa før de bruker appen ved mål.
 
 **Hele opplevelsen er statisk og lokal.** Ingen backend, innlogging, analyseverktøy, eksterne skrifter, API-er eller CDN-er. Illustrasjonene er inkluderte SVG-filer. Lydene genereres på enheten med Web Audio, så ingen lydfiler eller nettverk trengs. Det er ingen tilfeldig historie eller innhold som avhenger av datoen.
 
@@ -24,22 +30,22 @@ Alle stier er relative til appmappen, inkludert ikoner, manifest, startadresse, 
 
 ## Bytt spørsmål, svar og fortelling
 
-Alt spillinnhold ligger i **`case.config.js`**. De fire spørsmålene og historien er **plassholdere**, og må tilpasses de faktiske postene før arrangementet.
+Svar, spørsmål og innholdet i den hemmelige saksfilen ligger i **`case.config.js`**. Disse er oppdatert til de fire endelige postene:
 
-| Spor | Plassholderspørsmål | Eksempler på godkjente svar |
+| Post | Spørsmål | Godkjente svar |
 | --- | --- | --- |
-| 01 | Hvilket startnummer hadde deltakeren? | `13`, `013`, `tretten`, `nummer 13` |
-| 02 | Hvor ble deltakeren sist sett? | `broen`, `brua`, `broa`, `på broen`, `på brua` |
-| 03 | Hva lå igjen ved siste post? | `nøkkel`, `en nøkkel`, `nøkkelen` |
-| 04 | Hvilket ord var risset inn i treet? | `vent`, `vente` |
+| 01 | Hva het deltakeren som forsvant under Broløpet i 2001? | `Ole Vik` |
+| 02 | Hva var klokka da gutten banket på døren? | `18.42`, `18:42`, `1842` |
+| 03 | Hvilken øy ble deltakeren sist observert på? | `Føynland`, `Foynland` |
+| 04 | Hva forsøker den hemmelige beskjeden å advare dere mot? | `IKKE SNU DEG` |
 
-Hvert spor har `title`, `question`, `answers`, `maxTypos` og `success`. Store/små bokstaver, ekstra mellomrom, tegnsetting og norske tegnvarianter som `ø/o`, `æ/ae` og `å/a` normaliseres. `maxTypos: 1` tillater én innsetting, sletting eller erstatning. Tall og svaralternativer kortere enn fire tegn må stemme nøyaktig etter normalisering. Legg inn eksplisitte alternativer for andre ordformer; bruk `maxTypos: 0` ved korte eller presise koder.
+Store/små bokstaver og innledende/avsluttende mellomrom ignoreres. Navn, øynavn og advarsel normaliserer ekstra mellomrom og tegnsetting mellom ordene. Post 2 bruker `format: "time"` og godtar bare de tre eksplisitte klokkeslettvariantene. Alle fire poster har `maxTypos: 0`, så feil navn, klokkeslett og advarsler slipper ikke gjennom. Feil svar får bare en generell arkivmelding, aldri fasiten. Bekreftede svar maskeres, slik at appen ikke viser løsninger mens andre poster fortsatt er uløst.
 
-Behold nøyaktig fire spor. Rediger `revelation.title` og `revelation.paragraphs` for sluttrapporten. Tekst settes som tekst, ikke HTML. `decryption` styrer de faste meldingene i dekrypteringen. Alle tider er i millisekunder. `characterDelay`, `paragraphPause`, `finalHold` og `warningDuration` styrer lesetempo og siste pause. Ved redusert bevegelse vises hele avsnitt uten skriveanimasjon, med tilsvarende lesetid.
+Behold nøyaktig fire spor. `revelation.fields` inneholder personopplysningene, `connection` de tre nye opplysningene og `identity` den endelige identiteten. Ingen av disse settes inn i dokumentet før alle fire svar er godkjent. `decryption` styrer de faste meldingene i dekrypteringen. Alle tider er i millisekunder. `characterDelay`, `paragraphPause`, `finalHold` og `warningDuration` styrer lesetempo og siste pause. `identityDelay` er pausen fra «SE BAK DERE» til identiteten begynner å skrives inn. Ved redusert bevegelse vises hver opplysning uten skriveanimasjon, med lesetid.
 
-**Ved innholdsendring:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (for eksempel `sak013-v2`). Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
+**Ved innholdsendring:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v3`). Denne oppdateringen forkaster automatisk plassholderversjonens fremdrift. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
 
-Dette er et spill, ikke et sikkerhetssystem. Svarene finnes i den nedlastede kildekoden. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Bildet av broen er en egen arkiv-inspirert illustrasjon, ikke et historisk foto.
+Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninger før de er verifisert, men et fullstendig statisk, frakoblet spill kan ikke skjule løsninger fra noen som undersøker kildekoden, nettleserens lagring eller denne offentlige README-en. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Bildet av broen er en arkiv-inspirert illustrasjon, ikke et historisk foto eller dokumentasjon på siste observasjonssted. Den leverte politilogoen ligger lokalt i `assets/police-logo.png`, brukes i toppfelt og saksfil og lagres for frakoblet bruk.
 
 ## Gjennomføring og koordinering av skremmeøyeblikket
 
@@ -47,11 +53,11 @@ Dette er et spill, ikke et sikkerhetssystem. Svarene finnes i den nedlastede kil
 2. Trykk **Tilsyn** nederst, eller hold saksnummeret **013** øverst til venstre inne i omtrent to sekunder. Avtal timingen med den utkledde voksne.
 3. For presis timing, velg **Styr siste beskjed manuelt** før gruppen starter. Rapporten blir stående til den ansvarlige åpner Tilsyn og trykker **Vis siste beskjed**. Dette valget beholdes mellom grupper.
 4. Gruppen åpner saksmappen og bekrefter de fire svarene. Først etter alle fire riktige vises **ÅPNE SLUTTRAPPORTEN**. Det separate trykket gir den voksne tid til å gjøre seg klar.
-5. Standardforløpet har ca. 15,5 sekunder dekryptering, deretter en rapport som skrives frem. Etter siste avsnitt følger en lesepause og en varseltekst før **SE BAK DERE.** fyller skjermen. Den faktiske varigheten avhenger av tekstlengden; avtal aldri skremmen utelukkende etter en stoppeklokke.
+5. Etter **ALLE FIRE SPOR BEKREFTET / SAK 013 – TILGANG GODKJENT** følger ca. 15,5 sekunder dekryptering. Deretter åpnes **KONFIDENSIELT – SAK 013 / SAVNET PERSON** med navn, startnummer, dato og status. **NYE OPPLYSNINGER – 2026 / OLE VIK / NY IDENTITET FUNNET** skrives frem. Etter lesepausen fyller **SE BAK DERE** skjermen – dette er signalet til læreren. Etter 2,5 sekunder begynner **Ole Vik = OLE MAGNUS SVANVIK** å skrives inn under beskjeden. Begge blir stående til nullstilling. Avtal aldri skremmen utelukkende etter en stoppeklokke.
 
-Tilsynsdialogen **setter tidsforløpet på pause** mens den er åpen. **Hopp over animasjonen** går fra dekryptering til rapport, eller viser hele rapporten umiddelbart hvis rapporten allerede er åpen. Knappen hopper aldri direkte til skremmebeskjeden; bruk **Vis siste beskjed** for det.
+Tilsynsdialogen **setter tidsforløpet på pause** mens den er åpen. **Hopp over animasjonen** går fra dekryptering til rapport, eller viser hele rapporten umiddelbart hvis rapporten allerede er åpen. Knappen hopper aldri direkte til skremmebeskjeden; bruk **Vis siste beskjed** for det. Disse kontrollene er deaktivert før alle fire svar er godkjent.
 
-Ved bytte til en annen app/fane stopper tidsforløpet og lyd dempes. Når siden blir synlig igjen, fortsetter den fra samme punkt. En oppdatering midt i dekryptering eller rapport starter den aktuelle sekvensen fra begynnelsen, slik at ingen avsløring mistes. Bekreftede svar og usendte notater bevares. Er siste beskjed allerede vist, vises den igjen etter oppdatering.
+Ved bytte til en annen app/fane stopper tidsforløpet og lyd dempes. Når siden blir synlig igjen, fortsetter den fra samme punkt. En oppdatering midt i dekryptering eller rapport starter den aktuelle sekvensen fra begynnelsen, slik at ingen avsløring mistes. Bekreftede svar og usendte notater bevares. Er siste beskjed og hele identiteten allerede vist, vises begge umiddelbart etter oppdatering. Oppdatering midt i identitetsanimasjonen starter bare den siste innskrivingen på nytt.
 
 Skru ned iPad-volumet til et behagelig nivå før dere aktiverer lyd. Lyden kan slås av når som helst. Ingen raske strobelys brukes; reduserte bevegelsesinnstillinger respekteres. Tilpass skremmen til elevgruppen og la elever kunne stå over.
 

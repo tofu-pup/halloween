@@ -1,5 +1,5 @@
 // Bump this version whenever a shipped app file or case.config.js changes.
-const CACHE = "sak013-v1";
+const CACHE = "sak013-v2";
 const PREFIX = "sak013-";
 const ASSETS = [
   "./",
@@ -15,6 +15,7 @@ const ASSETS = [
   "./assets/icon-maskable.png",
   "./assets/bridge.svg",
   "./assets/grain.svg",
+  "./assets/police-logo.png",
 ];
 const assetURLs = ASSETS.map((path) => new URL(path, self.registration.scope).href);
 

@@ -16,7 +16,7 @@ let settings = { manualFinale: false };
 let state = freshState();
 
 function freshState() {
-  return { revision: config.revision, screen: "welcome", answers: config.clues.map(() => ""), drafts: config.clues.map(() => "") };
+  return { revision: config.revision, screen: "welcome", answers: config.clues.map(() => ""), drafts: config.clues.map(() => ""), identityRevealed: false };
 }
 
 function storageError(error) {
@@ -47,13 +47,14 @@ function restore() {
     state.drafts = saved.drafts.map((answer) => answer.slice(0, 100));
     state.screen = screens.includes(saved.screen) ? saved.screen : "welcome";
     if (screens.indexOf(state.screen) > 1 && !state.answers.every(Boolean)) state.screen = "investigation";
+    state.identityRevealed = state.screen === "finale" && saved.identityRevealed === true;
   } catch (error) {
     storageError(error);
   }
 }
 
 export function normalizeAnswer(value) {
-  return value.toLocaleLowerCase("nb-NO").trim().replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ");
+  return value.toLocaleLowerCase("nb-NO").trim().replace(/æ/g, "ae").replace(/ø/g, "o").replace(/å/g, "a").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").trim().replace(/\s+/g, " ");
 }
 
 function editDistance(a, b) {
@@ -69,6 +70,8 @@ function editDistance(a, b) {
 }
 
 export function acceptsAnswer(value, clue) {
+  // Time separators are optional, but the four digits must be exact.
+  if (clue.format === "time") return clue.answers.includes(value.trim());
   const answer = normalizeAnswer(value);
   if (!answer) return false;
   return clue.answers.some((candidate) => {
@@ -141,6 +144,7 @@ function stopSound() {
 }
 
 function showScreen(screen, focus = true) {
+  if (screens.indexOf(screen) > 1 && !state.answers.every((answer, i) => acceptsAnswer(answer, config.clues[i]))) screen = "investigation";
   runId++;
   waitingForFinale = false;
   state.screen = screen;
@@ -162,7 +166,7 @@ function showScreen(screen, focus = true) {
   }
   if (screen === "decryption") startDecryption(runId);
   if (screen === "revelation") startRevelation(runId);
-  if (screen === "finale") tone(42, 2.8, .28, "triangle");
+  if (screen === "finale") startFinale(runId);
 }
 
 function renderClues() {
@@ -190,6 +194,8 @@ function renderClues() {
       form.classList.remove("error");
       form.querySelector(".clue-state").textContent = "✓ BEKREFTET";
       input.readOnly = true;
+      // Do not display verified solutions to children still solving other posts.
+      input.type = "password";
       input.removeAttribute("aria-invalid");
       form.querySelector("button").hidden = true;
       feedback.textContent = clue.success;
@@ -220,7 +226,7 @@ function renderClues() {
         form.classList.remove("error");
         void form.offsetWidth;
         form.classList.add("error");
-        feedback.textContent = input.value.trim() ? "Ikke helt. Se på notatene deres og prøv igjen." : "Skriv inn et svar fra denne posten først.";
+        feedback.textContent = input.value.trim() ? "Opplysningene stemmer ikke med arkivet. Undersøk sporene på nytt." : "Skriv inn et svar fra denne posten først.";
         input.setAttribute("aria-invalid", "true");
         tone(85, .2, .08);
         input.focus();
@@ -297,15 +303,67 @@ async function typeParagraph(element, text, token) {
 async function startRevelation(token) {
   $("revelation-title").textContent = config.revelation.title;
   $("story-text").replaceChildren();
+  $("identity-connection").replaceChildren();
   $("revelation-warning").textContent = "";
-  for (const text of config.revelation.paragraphs) {
-    const paragraph = document.createElement("p");
-    $("story-text").append(paragraph);
-    if (!await typeParagraph(paragraph, text, token)) return;
-    paragraph.scrollIntoView({ behavior: "auto", block: "nearest" });
+  const fields = document.createElement("dl");
+  fields.className = "person-record";
+  $("story-text").append(fields);
+  for (const field of config.revelation.fields) {
+    const { row, value } = recordField(field);
+    fields.append(row);
+    if (!await typeParagraph(value, field.value, token)) return;
+    row.scrollIntoView({ behavior: "auto", block: "nearest" });
+    if (!await delay(config.revelation.paragraphPause, token)) return;
+  }
+  for (const text of config.revelation.connection) {
+    const line = document.createElement("p");
+    $("identity-connection").append(line);
+    if (!await typeParagraph(line, text, token)) return;
+    line.scrollIntoView({ behavior: "auto", block: "nearest" });
+    tone(90, .7, .1, "triangle");
     if (!await delay(config.revelation.paragraphPause, token)) return;
   }
   await finishReport(token);
+}
+
+function recordField(field) {
+  const row = document.createElement("div");
+  const label = document.createElement("dt");
+  const value = document.createElement("dd");
+  label.textContent = `${field.label}:`;
+  row.append(label, value);
+  return { row, value };
+}
+
+function completeReport() {
+  $("story-text").replaceChildren();
+  $("identity-connection").replaceChildren();
+  const fields = document.createElement("dl");
+  fields.className = "person-record";
+  for (const field of config.revelation.fields) {
+    const { row, value } = recordField(field);
+    value.textContent = field.value;
+    fields.append(row);
+  }
+  $("story-text").append(fields);
+  for (const text of config.revelation.connection) {
+    const line = document.createElement("p");
+    line.textContent = text;
+    $("identity-connection").append(line);
+  }
+}
+
+async function startFinale(token) {
+  $("finale-identity").textContent = "";
+  tone(55, 2.8, .14, "triangle");
+  if (!state.identityRevealed) {
+    if (!await delay(config.revelation.identityDelay, token)) return;
+    if (!await typeParagraph($("finale-identity"), config.revelation.identity, token)) return;
+    state.identityRevealed = true;
+    save();
+  } else {
+    $("finale-identity").textContent = config.revelation.identity;
+  }
 }
 
 async function finishReport(token) {
@@ -340,12 +398,7 @@ function skipAnimation() {
     showScreen("revelation");
   } else if (screen === "revelation") {
     const token = ++runId;
-    $("story-text").replaceChildren();
-    for (const text of config.revelation.paragraphs) {
-      const p = document.createElement("p");
-      p.textContent = text;
-      $("story-text").append(p);
-    }
+    completeReport();
     finishReport(token);
   }
 }
@@ -362,6 +415,9 @@ function resetCase() {
   save();
   renderClues();
   $("story-text").replaceChildren();
+  $("identity-connection").replaceChildren();
+  $("finale-identity").textContent = "";
+  $("revelation-title").textContent = "";
   $("terminal-log").textContent = "";
   $("revelation-warning").textContent = "";
   showScreen("welcome");
