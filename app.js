@@ -8,7 +8,9 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let runId = 0;
 let audioContext;
 let masterGain;
-let soundOn = false;
+const activeTones = new Set();
+let audioReady = false;
+let audioStarting;
 let noticeTimer;
 let holdTimer;
 let waitingForFinale = false;
@@ -89,58 +91,88 @@ function showNotice(message) {
   noticeTimer = setTimeout(() => { $("notice").hidden = true; }, 5500);
 }
 
-function tone(frequency = 110, duration = .3, volume = .15, type = "sine") {
-  if (!soundOn || !audioContext || audioContext.state !== "running") return;
-  const oscillator = audioContext.createOscillator();
+function tone(frequency = 196, duration = 1.2, volume = .18, type = "triangle") {
+  if (!audioReady || document.hidden || !audioContext || audioContext.state !== "running") return;
   const envelope = audioContext.createGain();
+  const filter = audioContext.createBiquadFilter();
   const now = audioContext.currentTime;
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, now);
-  oscillator.frequency.exponentialRampToValueAtTime(frequency * .73, now + duration);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(900, now);
+  filter.frequency.exponentialRampToValueAtTime(450, now + duration);
+  filter.Q.value = .7;
   envelope.gain.setValueAtTime(0, now);
-  envelope.gain.linearRampToValueAtTime(volume, now + .025);
+  envelope.gain.linearRampToValueAtTime(volume, now + Math.min(.15, duration * .18));
+  envelope.gain.exponentialRampToValueAtTime(volume * .65, now + duration * .45);
   envelope.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  oscillator.connect(envelope);
+  filter.connect(envelope);
   envelope.connect(masterGain);
-  oscillator.start(now);
-  oscillator.stop(now + duration + .02);
-  oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); };
+
+  // Slight beating and a quiet minor third make a dark, repeatable drone.
+  const partials = [[1, .8], [1.012, .22], [1.1892, .14]];
+  let remaining = partials.length;
+  for (const [ratio, weight] of partials) {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = ratio === 1 ? type : "sine";
+    oscillator.frequency.setValueAtTime(frequency * ratio, now);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * ratio * .93, now + duration);
+    gain.gain.value = weight;
+    oscillator.connect(gain);
+    gain.connect(filter);
+    activeTones.add(oscillator);
+    oscillator.start(now);
+    oscillator.stop(now + duration + .02);
+    oscillator.onended = () => {
+      activeTones.delete(oscillator);
+      oscillator.disconnect();
+      gain.disconnect();
+      if (--remaining === 0) { filter.disconnect(); envelope.disconnect(); }
+    };
+  }
 }
 
-async function toggleSound() {
-  if (soundOn) {
-    soundOn = false;
-    masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-  } else {
+async function activateSound() {
+  if (document.hidden) return false;
+  if (audioReady && audioContext?.state === "running") return true;
+  if (audioStarting) return audioStarting;
+  audioStarting = (async () => {
     try {
-      if (!audioContext) {
+      if (!audioContext || audioContext.state === "closed") {
         const Audio = window.AudioContext || window.webkitAudioContext;
         if (!Audio) throw new Error("Web Audio støttes ikke.");
-        audioContext = new Audio();
+        audioContext = new Audio({ latencyHint: "interactive" });
         masterGain = audioContext.createGain();
         masterGain.connect(audioContext.destination);
+        audioContext.addEventListener("statechange", checkSoundState);
       }
       await audioContext.resume();
       if (audioContext.state !== "running") throw new Error("Lyd ble ikke aktivert.");
-      soundOn = true;
-      masterGain.gain.setValueAtTime(.6, audioContext.currentTime);
-      tone(220, .25, .12);
+      audioReady = true;
+      masterGain.gain.setValueAtTime(.8, audioContext.currentTime);
+      return true;
     } catch (error) {
+      stopSound();
       console.warn("SAK 013: Lyd kunne ikke startes.", error);
-      showNotice("Lyd kunne ikke startes. Trykk på lydknappen igjen. Historien fungerer også uten lyd.");
+      showNotice("Lyd kunne ikke startes. Den forsøkes startet ved neste trykk. Historien fungerer også uten lyd.");
+      return false;
     }
+  })();
+  try { return await audioStarting; }
+  finally { audioStarting = undefined; }
+}
+
+function checkSoundState() {
+  if (audioReady && !document.hidden && audioContext.state !== "running") {
+    stopSound();
+    showNotice("Nettleseren har satt lyden på pause. Lyden fortsetter ved neste trykk på skjermen.");
   }
-  $("sound-toggle").setAttribute("aria-pressed", String(soundOn));
-  $("sound-toggle").setAttribute("aria-label", soundOn ? "Slå av lyd" : "Slå på lyd");
-  $("sound-label").textContent = soundOn ? "LYD PÅ" : "LYD AV";
 }
 
 function stopSound() {
   if (masterGain && audioContext) masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-  soundOn = false;
-  $("sound-toggle").setAttribute("aria-pressed", "false");
-  $("sound-toggle").setAttribute("aria-label", "Slå på lyd");
-  $("sound-label").textContent = "LYD AV";
+  for (const oscillator of activeTones) oscillator.stop();
+  activeTones.clear();
+  audioReady = false;
 }
 
 function showScreen(screen, focus = true) {
@@ -218,7 +250,7 @@ function renderClues() {
         save();
         updateSolved();
         updateProgress();
-        tone(285 + index * 35, .45, .13, "triangle");
+        tone([196, 220, 233.08, 261.63][index], 1.2, .17);
         const next = config.clues.findIndex((_, i) => !state.answers[i]);
         if (next >= 0) $(`answer-${next}`).focus();
         else $("unlock-case").focus();
@@ -228,7 +260,7 @@ function renderClues() {
         form.classList.add("error");
         feedback.textContent = input.value.trim() ? "Opplysningene stemmer ikke med arkivet. Undersøk sporene på nytt." : "Skriv inn et svar fra denne posten først.";
         input.setAttribute("aria-invalid", "true");
-        tone(85, .2, .08);
+        tone(185, .7, .14);
         input.focus();
       }
     });
@@ -278,7 +310,7 @@ async function startDecryption(token) {
     $("decrypt-progress").parentElement.setAttribute("aria-valuenow", String(step.progress));
     $("terminal-log").textContent = config.decryption.slice(Math.max(0, index - 2), index + 1).map((entry) => entry.log).join("\n");
     $("decryption").classList.toggle("glitch", index >= 3 && index % 2 === 1);
-    tone(step.tone, index >= 3 ? 1.5 : .5, .15, "triangle");
+    tone(step.tone, index >= 3 ? 2 : 1.2, .18);
     lastAt = step.at;
   }
   if (await delay(config.decryptionDuration - lastAt, token)) showScreen("revelation");
@@ -320,7 +352,7 @@ async function startRevelation(token) {
     $("identity-connection").append(line);
     if (!await typeParagraph(line, text, token)) return;
     line.scrollIntoView({ behavior: "auto", block: "nearest" });
-    tone(90, .7, .1, "triangle");
+    tone(196, 1.4, .18);
     if (!await delay(config.revelation.paragraphPause, token)) return;
   }
   await finishReport(token);
@@ -355,7 +387,7 @@ function completeReport() {
 
 async function startFinale(token) {
   $("finale-identity").textContent = "";
-  tone(55, 2.8, .14, "triangle");
+  tone(174.61, 3.5, .2);
   if (!state.identityRevealed) {
     if (!await delay(config.revelation.identityDelay, token)) return;
     if (!await typeParagraph($("finale-identity"), config.revelation.identity, token)) return;
@@ -375,7 +407,7 @@ async function finishReport(token) {
   if (!await delay(config.revelation.finalHold, token)) return;
   if (settings.manualFinale) return;
   $("revelation-warning").textContent = config.revelation.warning;
-  tone(62, 2, .12, "triangle");
+  tone(185, 2.5, .18);
   if (!await delay(config.revelation.warningDuration, token)) return;
   if (!settings.manualFinale) showScreen("finale");
 }
@@ -423,9 +455,18 @@ function resetCase() {
   showScreen("welcome");
 }
 
-$("open-case").addEventListener("click", () => { tone(140, .35); showScreen("investigation"); });
+$("open-case").addEventListener("click", () => {
+  const ready = activateSound();
+  showScreen("investigation");
+  const token = runId;
+  ready.then((started) => { if (started && token === runId) tone(196, 1.8, .23); });
+});
 $("unlock-case").addEventListener("click", () => { if (state.answers.every(Boolean)) showScreen("decryption"); });
-$("sound-toggle").addEventListener("click", toggleSound);
+// Safari requires a real gesture; sound is enabled by default, not autoplayed.
+document.addEventListener("click", () => { activateSound(); }, { capture: true });
+document.addEventListener("keydown", (event) => {
+  if (!event.repeat && (event.key === "Enter" || event.key === " ")) activateSound();
+});
 $("supervisor-open").addEventListener("click", openSupervisor);
 $("supervisor-close").addEventListener("click", closeSupervisor);
 $("skip-animation").addEventListener("click", skipAnimation);
@@ -466,7 +507,10 @@ document.addEventListener("fullscreenchange", () => {
 document.addEventListener("visibilitychange", () => {
   clearTimeout(holdTimer);
   if (document.hidden && masterGain) masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-  else if (soundOn && masterGain) masterGain.gain.setValueAtTime(.6, audioContext.currentTime);
+  else {
+    checkSoundState();
+    if (audioReady && masterGain) masterGain.gain.setValueAtTime(.8, audioContext.currentTime);
+  }
 });
 window.addEventListener("pagehide", save);
 

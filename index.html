@@ -25,10 +25,6 @@
         </div>
         <div class="header-case"><span class="tiny-cross">+</span> SAK 013 <span class="header-divider">/</span> BLODLØPET</div>
         <div class="header-actions">
-          <button id="sound-toggle" class="utility-button" aria-pressed="false" aria-label="Slå på lyd">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="sound-waves" d="M15 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/><path class="sound-muted" d="m16 9 6 6m0-6-6 6"/></svg>
-            <span id="sound-label">LYD AV</span>
-          </button>
           <button id="fullscreen-toggle" class="utility-button icon-only" aria-label="Åpne fullskjerm" title="Fullskjerm">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg>
           </button>
@@ -42,14 +38,13 @@
             <h1 id="welcome-title"><span class="case-heading">SAK 013</span>BLOD<span class="title-dash">–</span><br>LØPET<span class="title-period">.</span></h1>
             <div class="hero-rule"><span></span><span>2001 — 2024 — 2026</span></div>
             <p class="hero-lead">67 startet. 66 kom i mål.<br><em>Én forsvant sporløst.</em></p>
-            <p class="hero-description">Fire poster langs Broløpet. Fire svar.<br>Nå skal dere åpne den lukkede saken.</p>
             <button id="open-case" class="primary-button"><span>ÅPNE SAKSMAPPEN</span><span aria-hidden="true">↗</span></button>
             <div class="access-note"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 7V5a4 4 0 0 1 8 0v2M3 7h10v8H3Z"/></svg> BEGRENSET INNSYN · KUN FOR ETTERFORSKERE</div>
           </div>
           <figure class="evidence-board">
             <div class="evidence-label"><span class="live-dot"></span> BEVISMATERIALE 01 <span>ARKIVKOPI</span></div>
             <div class="photo-wrap">
-              <img class="bridge-photo" src="./assets/bridge.svg" alt="Et tåkete, forlatt broløp. En enslig skikkelse står midt på broen." width="900" height="1100">
+              <img class="bridge-photo" src="./assets/bridge.png" alt="En enslig skikkelse på en våt bro i måneskinn, opplyst av gatelykter." width="1134" height="1387">
               <div class="photo-scanline" aria-hidden="true"></div>
               <span class="photo-date">31.10.2001</span>
               <div class="subject-marker" aria-hidden="true"><span>13</span></div>
@@ -62,31 +57,16 @@
           <div class="welcome-meta">
             <div><span class="meta-label">HENDELSE</span><span>Broløpet · 31. oktober 2001</span></div>
             <div><span class="meta-label">STATUS</span><span class="status-text"><i></i> Etterforskning pågår</span></div>
-            <div><span class="meta-label">DERES OPPDRAG</span><span>Samle sporene. Bryt stillheten.</span></div>
+            <div><span class="meta-label">DERES OPPDRAG</span><span>Åpne saken. Finn sannheten.</span></div>
           </div>
         </section>
 
         <section id="investigation" class="screen investigation-screen" aria-labelledby="investigation-title" hidden>
           <div class="section-heading">
-            <div><div class="eyebrow">SAKSMAPPE 013 / IDENTITETSKONTROLL</div><h2 id="investigation-title" tabindex="-1">Hva fant dere der ute?</h2><p>Skriv inn svarene fra de fire postene. Bruk notatene deres.</p></div>
+            <div><div class="eyebrow">SAKSMAPPE 013 / IDENTITETSKONTROLL</div><h2 id="investigation-title" tabindex="-1">Hva fant dere der ute?</h2><p>Bruk notatene deres.</p></div>
             <div class="progress-summary"><span id="solved-count">0</span><span>/ 04<br>SPOR BEKREFTET</span></div>
           </div>
-          <div class="investigation-layout">
-            <div id="clue-list" class="clue-list"></div>
-            <aside class="case-sidebar">
-              <div class="folder-tab">SAKSNOTAT / 013</div>
-              <div class="case-note">
-                <span class="document-eyebrow">INTERN RAPPORT</span>
-                <h3>67 startet.<br>66 kom i mål.</h3>
-                <p>2001: Én elev forsvant. Løpet ble stanset frem til 2024.</p>
-                <p>Etter gjenåpningen: uforklarlige skritt, en enslig løper og banking fra et forlatt hus.</p>
-                <p>Oktober 2026: Huset ble revet. Arbeidere meldte om urovekkende hendelser. Etterforskningen ble gjenåpnet.</p>
-                <div class="note-divider"></div>
-                <span class="document-eyebrow">RESTEN AV MAPPEN ER LÅST</span>
-              </div>
-              <div class="locked-notice"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5Z"/></svg><span>Sluttrapporten åpnes når<br>alle fire spor er bekreftet.</span></div>
-            </aside>
-          </div>
+          <div id="clue-list" class="clue-list"></div>
           <div id="unlock-ready" class="unlock-ready" hidden><div><span class="eyebrow">ALLE FIRE SPOR BEKREFTET</span><p>SAK 013 – TILGANG GODKJENT</p></div><button id="unlock-case" class="primary-button"><span>ÅPNE SLUTTRAPPORTEN</span><span aria-hidden="true">↗</span></button></div>
         </section>
 
@@ -135,6 +115,7 @@
       <div class="dialog-heading"><span class="eyebrow">KUN FOR ANSVARLIG VOKSEN</span><button id="supervisor-close" class="close-button" aria-label="Lukk tilsynskontroll">×</button></div>
       <h2 id="supervisor-title">Tilsynskontroll</h2>
       <p>Avtal skremmeøyeblikket før dere åpner sluttrapporten. Siste skjerm blir stående til saken nullstilles.</p>
+      <p class="sound-help">Lydeffektene starter automatisk ved første trykk. Juster lyden med enhetens volumknapper. Ingen lyd? Sjekk lydløsmodus og Bluetooth-utgang.</p>
       <div class="supervisor-options">
         <label class="checkbox-row"><input id="manual-finale" type="checkbox"><span>Styr siste beskjed manuelt<small>Rapporten venter til en voksen trykker «Vis siste beskjed» her.</small></span></label>
         <button id="skip-animation" class="secondary-button" disabled>Hopp over animasjonen</button>
@@ -147,7 +128,7 @@
     <dialog id="reset-dialog" aria-labelledby="reset-title">
       <span class="eyebrow">SAK 013 / NULLSTILLING</span>
       <h2 id="reset-title">Begynne på nytt?</h2>
-      <p>Alle svar og all fremdrift for denne gruppen slettes. Lyd slås av. Enheten forblir klar uten nett.</p>
+      <p>Alle svar og all fremdrift for denne gruppen slettes. Pågående lyder stoppes. Enheten forblir klar uten nett.</p>
       <div class="dialog-buttons"><button id="cancel-reset" class="secondary-button">Avbryt</button><button id="confirm-reset" class="danger-button">Ja, nullstill alt</button></div>
     </dialog>
     <noscript><div class="noscript">Denne saksmappen trenger JavaScript. Slå på JavaScript i nettleseren og åpne siden på nytt.</div></noscript>

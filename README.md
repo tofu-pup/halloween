@@ -8,7 +8,7 @@ En norsk, mobiltilpasset Halloween-finale for 7. trinn. Fire spor åpner en grad
 
 Den savnede var Ole Vik, startnummer 13. Sluttskjermen avslører at han nå er Ole Magnus Svanvik, elevenes lærer. **Hvordan eller hvorfor han forsvant og kom tilbake forklares ikke.** Elevene undersøker fire poster langs den vanlige Broløpet-løypa før de bruker appen ved mål.
 
-**Hele opplevelsen er statisk og lokal.** Ingen backend, innlogging, analyseverktøy, eksterne skrifter, API-er eller CDN-er. Illustrasjonene er inkluderte SVG-filer. Lydene genereres på enheten med Web Audio, så ingen lydfiler eller nettverk trengs. Det er ingen tilfeldig historie eller innhold som avhenger av datoen.
+**Hele opplevelsen er statisk og lokal.** Ingen backend, innlogging, analyseverktøy, eksterne skrifter, API-er eller CDN-er. Alle bilder og illustrasjoner ligger lokalt i `assets`. Lydene genereres på enheten med Web Audio, så ingen lydfiler eller nettverk trengs. Det er ingen tilfeldig historie eller innhold som avhenger av datoen.
 
 ## Start lokalt
 
@@ -43,13 +43,13 @@ Store/små bokstaver og innledende/avsluttende mellomrom ignoreres. Navn, øynav
 
 Behold nøyaktig fire spor. `revelation.fields` inneholder personopplysningene, `connection` de tre nye opplysningene og `identity` den endelige identiteten. Ingen av disse settes inn i dokumentet før alle fire svar er godkjent. `decryption` styrer de faste meldingene i dekrypteringen. Alle tider er i millisekunder. `characterDelay`, `paragraphPause`, `finalHold` og `warningDuration` styrer lesetempo og siste pause. `identityDelay` er pausen fra «SE BAK DERE» til identiteten begynner å skrives inn. Ved redusert bevegelse vises hver opplysning uten skriveanimasjon, med lesetid.
 
-**Ved innholdsendring:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v4`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stilendringer beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
+**Ved innholdsendring:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v5`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stil- og lydendringer beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
 
-Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninger før de er verifisert, men et fullstendig statisk, frakoblet spill kan ikke skjule løsninger fra noen som undersøker kildekoden, nettleserens lagring eller denne offentlige README-en. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Bildet av broen er en arkiv-inspirert illustrasjon, ikke et historisk foto eller dokumentasjon på siste observasjonssted. Den leverte politilogoen ligger lokalt i `assets/police-logo.png`, brukes i toppfelt og saksfil og lagres for frakoblet bruk.
+Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninger før de er verifisert, men et fullstendig statisk, frakoblet spill kan ikke skjule løsninger fra noen som undersøker kildekoden, nettleserens lagring eller denne offentlige README-en. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Det leverte bildet av broen ligger i `assets/bridge.png` og lagres for frakoblet bruk. Det er en arkiv-inspirert illustrasjon, ikke et historisk foto eller dokumentasjon på siste observasjonssted. Den leverte politilogoen ligger lokalt i `assets/police-logo.png`, brukes i toppfelt og saksfil og lagres for frakoblet bruk.
 
 ## Gjennomføring og koordinering av skremmeøyeblikket
 
-1. Før første gruppe: åpne appen på riktig iPad og aktiver eventuelt lyd med **LYD AV**-knappen. På iOS krever lyd et bevisst trykk. Lyd starter aldri automatisk og slås av ved ny sideinnlasting.
+1. Før første gruppe: åpne appen på riktig iPad og still inn et behagelig medievolum. **Lyd er på som standard**, uten av/på-knapp. Safari tillater ikke lyd før første brukerhandling; trykket på **ÅPNE SAKSMAPPEN** starter en mørk, lavmælt effekt. Deretter kommer korte, lagdelte droner ved svar og avsløring – ingen kontinuerlig bakgrunnsmusikk. Etter oppdatering starter lydmotoren igjen ved neste trykk.
 2. Trykk **Tilsyn** nederst, eller hold saksnummeret **013** øverst til venstre inne i omtrent to sekunder. Avtal timingen med den utkledde voksne.
 3. For presis timing, velg **Styr siste beskjed manuelt** før gruppen starter. Rapporten blir stående til den ansvarlige åpner Tilsyn og trykker **Vis siste beskjed**. Dette valget beholdes mellom grupper.
 4. Gruppen åpner saksmappen og bekrefter de fire svarene. Først etter alle fire riktige vises **ÅPNE SLUTTRAPPORTEN**. Det separate trykket gir den voksne tid til å gjøre seg klar.
@@ -59,13 +59,15 @@ Tilsynsdialogen **setter tidsforløpet på pause** mens den er åpen. **Hopp ove
 
 Ved bytte til en annen app/fane stopper tidsforløpet og lyd dempes. Når siden blir synlig igjen, fortsetter den fra samme punkt. En oppdatering midt i dekryptering eller rapport starter den aktuelle sekvensen fra begynnelsen, slik at ingen avsløring mistes. Bekreftede svar og usendte notater bevares. Er siste beskjed og hele identiteten allerede vist, vises begge umiddelbart etter oppdatering. Oppdatering midt i identitetsanimasjonen starter bare den siste innskrivingen på nytt.
 
-Skru ned iPad-volumet til et behagelig nivå før dere aktiverer lyd. Lyden kan slås av når som helst. Ingen raske strobelys brukes; reduserte bevegelsesinnstillinger respekteres. Tilpass skremmen til elevgruppen og la elever kunne stå over.
+Still iPad-volumet til et behagelig nivå før dere åpner saksmappen. Bruk enhetens volumknapper for å justere eller dempe lyd; appen har ingen lydknapp. Ingen raske strobelys brukes; reduserte bevegelsesinnstillinger respekteres. Tilpass skremmen til elevgruppen og la elever kunne stå over.
+
+**Ingen lydeffekt ved åpning?** Kontroller medievolumet, slå av lydløsmodus i Kontrollsenter og sjekk at lyden ikke sendes til hodetelefoner/Bluetooth. Safari kan dempe Web Audio i lydløsmodus; appen kan ikke lese maskinvarens demping eller garantere lyd på enheten. Effektene bruker langsomme anslag, filtrerte overtoner, svake svevninger og en mollklang, uten tilfeldig variasjon. Hvis nettleseren setter lydmotoren på pause, fortsetter lyd automatisk ved neste trykk. Oppstartfeil vises som en melding, men blokkerer aldri spillet. Hele historien fungerer uten lyd.
 
 ## Nullstilling mellom grupper
 
 **Tilsyn → Nullstill saken → Ja, nullstill alt.** Langtrykk på **013** gir samme kontrollpanel. Nullstilling krever alltid bekreftelse og fungerer uten nett.
 
-Dette fjerner alle svar, usendte notater, bekreftelser, pågående sekvenser og sluttbildet. Lyd slås av, og velkomstskjermen vises. Frakoblet cache beholdes. Bare den voksnes valg om manuell siste beskjed beholdes. Nullstill før neste gruppe får iPaden. Ha bare **én appfane / ett appvindu** åpent per iPad.
+Dette fjerner alle svar, usendte notater, bekreftelser, pågående sekvenser og sluttbildet. Pågående lyder stoppes, og velkomstskjermen vises. Lyd starter automatisk igjen for neste gruppe. Frakoblet cache beholdes. Bare den voksnes valg om manuell siste beskjed beholdes. Nullstill før neste gruppe får iPaden. Ha bare **én appfane / ett appvindu** åpent per iPad.
 
 Hvis lokal lagring er blokkert eller full, vises en tydelig advarsel. Spillet fungerer fortsatt, men fremdrift kan da ikke gjenopprettes etter oppdatering.
 
@@ -74,7 +76,7 @@ Hvis lokal lagring er blokkert eller full, vises en tydelig advarsel. Spillet fu
 1. Åpne den publiserte HTTPS-adressen i Safari mens enheten har nett.
 2. Vent til det står **KLAR UTEN NETT** nederst. Denne meldingen vises først når service worker har bekreftet at **alle** nødvendige appfiler finnes i hurtigbufferen.
 3. Velg **Del → Legg til på Hjem-skjerm**. Start fra Hjem-skjermen og vent på samme bekreftelse også der. Safari og Hjem-skjerm-appen kan ha separate lagringsområder.
-4. Slå på flymodus og slå av Wi-Fi. Lukk og åpne appen, spill gjennom alle fire svar, slå på lyd, vis siste beskjed, og nullstill.
+4. Slå på flymodus og slå av Wi-Fi. Lukk og åpne appen, spill gjennom alle fire svar, kontroller lydeffektene, vis siste beskjed, og nullstill.
 5. Spill en ny runde i flymodus. Prøv også å oppdatere etter to riktige svar og kontroller at svarene bevares.
 6. Gjenta på **hver iPad** før arrangementet. En annen enhet eller nettleser er ikke automatisk klargjort.
 

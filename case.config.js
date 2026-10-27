@@ -34,12 +34,12 @@ export const CASE_CONFIG = {
     },
   ],
   decryption: [
-    { at: 0, progress: 8, message: "ALLE FIRE SPOR BEKREFTET", log: "> FIRE SPOR MOTTATT", tone: 110 },
-    { at: 2400, progress: 27, message: "Henter vitneforklaringer fra 2001 …", log: "> ARKIV 2001 / TILGANG GJENOPPRETTET", tone: 130 },
-    { at: 5000, progress: 49, message: "Én deltaker mangler i resultatlisten.", log: "> DELTAKER 013 / INGEN MÅLPASSERING", tone: 98 },
-    { at: 7800, progress: 71, message: "Etterforskningen gjenåpnet. Oktober 2026.", log: "> NYE OPPLYSNINGER / 2026", tone: 82 },
-    { at: 10600, progress: 91, message: "Kobler sammen opplysningene …", log: "> IDENTITETSKONTROLL PÅGÅR", tone: 65 },
-    { at: 13400, progress: 100, message: "Sluttrapport dekryptert.", log: "> SAK 013 / IKKE LENGER LUKKET", tone: 55 },
+    { at: 0, progress: 8, message: "ALLE FIRE SPOR BEKREFTET", log: "> FIRE SPOR MOTTATT", tone: 220 },
+    { at: 2400, progress: 27, message: "Henter vitneforklaringer fra 2001 …", log: "> ARKIV 2001 / TILGANG GJENOPPRETTET", tone: 207.65 },
+    { at: 5000, progress: 49, message: "Én deltaker mangler i resultatlisten.", log: "> DELTAKER 013 / INGEN MÅLPASSERING", tone: 196 },
+    { at: 7800, progress: 71, message: "Etterforskningen gjenåpnet. Oktober 2026.", log: "> NYE OPPLYSNINGER / 2026", tone: 185 },
+    { at: 10600, progress: 91, message: "Kobler sammen opplysningene …", log: "> IDENTITETSKONTROLL PÅGÅR", tone: 174.61 },
+    { at: 13400, progress: 100, message: "Sluttrapport dekryptert.", log: "> SAK 013 / IKKE LENGER LUKKET", tone: 164.81 },
   ],
   decryptionDuration: 15500,
   revelation: {

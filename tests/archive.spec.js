@@ -22,7 +22,7 @@ async function supervisor(page) {
   await page.getByRole("button", { name: "Tilsyn", exact: true }).click();
 }
 
-test("archive loads with only local assets and caches the complete /halloween/ app", async ({ page }) => {
+test("archive loads with only local assets and caches the complete /halloween/ app", async ({ page, context }) => {
   const errors = [];
   const requests = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -40,8 +40,15 @@ test("archive loads with only local assets and caches the complete /halloween/ a
   expect(cache).toContain("/halloween/case.config.js");
   expect(cache).toContain("/halloween/assets/icon-512.png");
   expect(cache).toContain("/halloween/assets/police-logo.png");
+  expect(cache).toContain("/halloween/assets/bridge.png");
+  await expect(page.locator(".bridge-photo")).toHaveAttribute("src", "./assets/bridge.png");
+  expect(await page.locator(".bridge-photo").evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(page.locator(".masthead .police-logo")).toBeVisible();
   expect(await page.locator(".masthead .police-logo").evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator(".bridge-photo")).toBeVisible();
+  await expect(page.locator(".bridge-photo")).toHaveJSProperty("naturalWidth", 1134);
 });
 
 test("accepts Norwegian variants, rejects wrong and empty answers, preserves drafts and progress", async ({ page }) => {
@@ -112,7 +119,7 @@ test("entire timed experience, refresh and reset/replay work in airplane mode", 
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
   await expect(page.locator("#welcome")).toBeVisible();
-  await expect(page.locator("#sound-toggle")).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#sound-toggle")).toHaveCount(0);
   await page.reload();
   await solve(page);
   await supervisor(page);
@@ -176,14 +183,98 @@ test("two-second case-number hold opens discreet adult controls", async ({ page 
   await expect(page.locator("#supervisor-dialog")).toBeVisible();
 });
 
-test("sound is gesture-activated and works with generated local audio", async ({ page, context }) => {
+test("dark sound is enabled by default on the first gesture and works offline without a toggle", async ({ page, context }) => {
+  await page.addInitScript(() => {
+    const NativeAudioContext = window.AudioContext;
+    window.AudioContext = class extends NativeAudioContext {
+      constructor(...args) {
+        super(...args);
+        const analyser = this.createAnalyser();
+        analyser.fftSize = 2048;
+        const probe = { context: this, analyser, master: null, voices: 0, peakRms: 0, midrangePeak: -Infinity };
+        window.__soundProbe = probe;
+        const samples = new Float32Array(analyser.fftSize);
+        const spectrum = new Float32Array(analyser.frequencyBinCount);
+        // Capture during playback, not after Playwright's click/assertion round trips.
+        setInterval(() => {
+          analyser.getFloatTimeDomainData(samples);
+          probe.peakRms = Math.max(probe.peakRms, Math.sqrt(samples.reduce((sum, value) => sum + value * value, 0) / samples.length));
+          analyser.getFloatFrequencyData(spectrum);
+          for (let i = 0; i < spectrum.length; i++) {
+            const frequency = i * this.sampleRate / analyser.fftSize;
+            if (frequency >= 160 && frequency <= 320) probe.midrangePeak = Math.max(probe.midrangePeak, spectrum[i]);
+          }
+        }, 16);
+        const createGain = this.createGain.bind(this);
+        this.createGain = () => {
+          const gain = createGain();
+          if (!probe.master) {
+            probe.master = gain;
+            const connect = gain.connect.bind(gain);
+            gain.connect = (destination, ...options) => {
+              if (destination === this.destination) {
+                connect(analyser);
+                return analyser.connect(destination, ...options);
+              }
+              return connect(destination, ...options);
+            };
+          }
+          return gain;
+        };
+        const createOscillator = this.createOscillator.bind(this);
+        this.createOscillator = () => {
+          probe.voices++;
+          return createOscillator();
+        };
+      }
+    };
+  });
   await ready(page);
   await context.setOffline(true);
-  await page.locator("#sound-toggle").click();
-  await expect(page.locator("#sound-toggle")).toHaveAttribute("aria-pressed", "true");
+  expect(await page.evaluate(() => window.__soundProbe)).toBeUndefined();
+  await expect(page.getByRole("button", { name: /lyd/i })).toHaveCount(0);
   await page.locator("#open-case").click();
-  await page.locator("#sound-toggle").click();
-  await expect(page.locator("#sound-label")).toHaveText("LYD AV");
+  await expect.poll(() => page.evaluate(() => window.__soundProbe.peakRms)).toBeGreaterThan(.02);
+  await expect.poll(() => page.evaluate(() => window.__soundProbe.midrangePeak)).toBeGreaterThan(-35);
+  const signal = await page.evaluate(() => {
+    const probe = window.__soundProbe;
+    return { peakRms: probe.peakRms, midrangePeak: probe.midrangePeak, state: probe.context.state };
+  });
+  expect(signal.state).toBe("running");
+  expect(signal.peakRms).toBeGreaterThan(.02);
+  expect(signal.midrangePeak).toBeGreaterThan(-35);
+  expect(await page.evaluate(() => window.__soundProbe.voices)).toBe(3);
+  await page.locator("#answer-0").fill(answers[0]);
+  await page.locator(".clue-card").first().getByRole("button").click();
+  expect(await page.evaluate(() => window.__soundProbe.voices)).toBe(6);
+  await supervisor(page);
+  await page.locator("#request-reset").click();
+  await page.locator("#confirm-reset").click();
+  await expect(page.locator("#welcome")).toBeVisible();
+  await page.waitForTimeout(100);
+  const muted = await page.evaluate(() => {
+    const samples = new Float32Array(window.__soundProbe.analyser.fftSize);
+    window.__soundProbe.analyser.getFloatTimeDomainData(samples);
+    return Math.max(...samples.map(Math.abs));
+  });
+  expect(muted).toBeLessThan(.0001);
+  await page.locator("#open-case").click();
+  await expect.poll(() => page.evaluate(() => window.__soundProbe.voices)).toBe(9);
+  await page.evaluate(() => window.__soundProbe.context.suspend());
+  await expect(page.locator("#notice")).toContainText("satt lyden på pause");
+  await page.locator("#answer-0").click();
+  await expect.poll(() => page.evaluate(() => window.__soundProbe.context.state)).toBe("running");
+});
+
+test("audio startup failure reports the problem without blocking clue entry", async ({ page }) => {
+  await page.addInitScript(() => {
+    AudioContext.prototype.resume = () => Promise.reject(new Error("Audio blocked"));
+  });
+  await ready(page);
+  await page.locator("#open-case").click();
+  await expect(page.locator("#notice")).toContainText("Lyd kunne ikke startes");
+  await expect(page.locator("#investigation")).toBeVisible();
+  await expect(page.locator("#answer-0")).toBeEditable();
 });
 
 test("mobile and iPad layouts fit without horizontal overflow", async ({ page }) => {
@@ -194,10 +285,16 @@ test("mobile and iPad layouts fit without horizontal overflow", async ({ page })
     if (viewport.width === 390) await page.screenshot({ path: "test-results/welcome-mobile.png", fullPage: true, animations: "disabled" });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const action = await page.locator("#open-case").boundingBox();
-    expect(action.height).toBeGreaterThanOrEqual(88);
+    await expect(page.locator("#open-case")).toHaveCSS("min-height", "88px");
+    expect(Math.round(action.height)).toBeGreaterThanOrEqual(88);
     const fontSize = (selector) => page.locator(selector).first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
     expect(await fontSize("#open-case")).toBeGreaterThanOrEqual(viewport.width >= 900 ? 28 : 22);
-    expect(await fontSize(".hero-description")).toBeGreaterThanOrEqual(21);
+    await expect(page.locator(".hero-description")).toHaveCount(0);
+    await expect(page.locator("#welcome")).not.toContainText("Fire poster");
+    expect(await fontSize(".access-note")).toBeGreaterThanOrEqual(viewport.width >= 900 ? 15 : 14);
+    expect(await fontSize(".meta-label")).toBeGreaterThanOrEqual(14);
+    expect(await fontSize(".welcome-meta > div")).toBeGreaterThanOrEqual(viewport.width >= 900 ? 20 : 18);
+    expect(await fontSize(".app-footer")).toBeGreaterThanOrEqual(viewport.width >= 900 ? 14 : 12);
     expect(await fontSize(".hero-lead")).toBeGreaterThanOrEqual(28);
     if (viewport.width >= 900) {
       expect(action.y + action.height).toBeLessThanOrEqual(viewport.height - 44);
@@ -207,10 +304,16 @@ test("mobile and iPad layouts fit without horizontal overflow", async ({ page })
     }
     await page.locator("#open-case").click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.locator("#investigation aside")).toHaveCount(0);
+    await expect(page.locator("#investigation")).not.toContainText("SAKSNOTAT");
+    const clueList = await page.locator("#clue-list").boundingBox();
+    const investigation = await page.locator("#investigation").boundingBox();
+    expect(Math.round(clueList.width)).toBe(Math.round(investigation.width));
     expect(await fontSize(".clue-card label")).toBeGreaterThanOrEqual(24);
     expect(await fontSize(".answer-row button")).toBeGreaterThanOrEqual(18);
     const input = await page.locator("#answer-0").boundingBox();
-    expect(input.height).toBeGreaterThanOrEqual(60);
+    await expect(page.locator("#answer-0")).toHaveCSS("min-height", "60px");
+    expect(Math.round(input.height)).toBeGreaterThanOrEqual(60);
     if (viewport.width === 1194) await page.screenshot({ path: "test-results/investigation-ipad.png", fullPage: true, animations: "disabled" });
     await supervisor(page);
     await page.locator("#request-reset").click();

@@ -1,5 +1,5 @@
 // Bump this version whenever a shipped app file or case.config.js changes.
-const CACHE = "sak013-v3";
+const CACHE = "sak013-v4";
 const PREFIX = "sak013-";
 const ASSETS = [
   "./",
@@ -13,7 +13,7 @@ const ASSETS = [
   "./assets/icon-192.png",
   "./assets/icon-512.png",
   "./assets/icon-maskable.png",
-  "./assets/bridge.svg",
+  "./assets/bridge.png",
   "./assets/grain.svg",
   "./assets/police-logo.png",
 ];
