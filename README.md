@@ -4,7 +4,7 @@ En norsk, mobiltilpasset Halloween-finale for 7. trinn. Fire spor åpner en grad
 
 ## Historien (kun for arrangører – inneholder løsningen)
 
-31. oktober 2001 startet 67 elever i Broløpet. Bare 66 kom i mål. Løpet ble stanset frem til 2024. Etter gjenåpningen ble det meldt om uforklarlige skritt, en enslig løper og banking fra et forlatt hus. Da huset ble revet i oktober 2026, meldte arbeidere om urovekkende hendelser. Etterforskningen ble gjenåpnet.
+31. oktober 2001 startet 34 elever i Broløpet. Bare 33 kom i mål. Løpet ble stanset frem til 2024. Etter gjenåpningen ble det meldt om uforklarlige skritt, en enslig løper og banking fra et forlatt hus. Da huset ble revet i oktober 2026, meldte arbeidere om urovekkende hendelser. Etterforskningen ble gjenåpnet.
 
 Den savnede var Ole Vik, startnummer 13. Vendingen på slutten er at han ble angrepet av en svane og ble Ole Magnus Svanevik, elevenes lærer. Sluttskjermen viser dette som **Ole Vik + 🦢 = OLE MAGNUS SVANEVIK**, uten ytterligere forklaring. Elevene undersøker fire poster langs den vanlige Broløpet-løypa før de bruker appen ved mål.
 
@@ -43,7 +43,7 @@ Store/små bokstaver og innledende/avsluttende mellomrom ignoreres. Navn, øynav
 
 Behold nøyaktig fire spor. `revelation.fields` inneholder personopplysningene, `connection` de tre nye opplysningene og `identity` den endelige identiteten. Ingen av disse settes inn i dokumentet før alle fire svar er godkjent. `decryption` styrer de faste meldingene i dekrypteringen. Alle tider er i millisekunder. `characterDelay`, `paragraphPause`, `finalHold` og `warningDuration` styrer lesetempo og siste pause. `identityDelay` er pausen fra «SE BAK DERE» til identiteten begynner å skrives inn. Ved redusert bevegelse vises hver opplysning uten skriveanimasjon, med lesetid.
 
-**Ved endringer som gjør lagrede svar ugyldige:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v7`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stil-, lyd- og skrivefeilrettinger beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
+**Ved endringer som gjør lagrede svar ugyldige:** Endre `revision` i `case.config.js` for å forkaste gammel gruppefremdrift, og øk `CACHE` i `sw.js` (neste versjon: `sak013-v8`). Historieoppdateringen forkaster automatisk plassholderversjonens fremdrift. Rene stil-, lyd- og skrivefeilrettinger beholder fremdriften. Øk cacheversjonen ved enhver endring i publiserte filer. Legg også nye appfiler til i `ASSETS` i `sw.js`; ellers kan de mangle uten nett.
 
 Dette er et spill, ikke et sikkerhetssystem. Grensesnittet viser ingen løsninger før de er verifisert, men et fullstendig statisk, frakoblet spill kan ikke skjule løsninger fra noen som undersøker kildekoden, nettleserens lagring eller denne offentlige README-en. «Gradert» og voksenkontrollen er del av presentasjonen, ikke autentisering. Det leverte bildet av broen ligger i `assets/bridge.png` og lagres for frakoblet bruk. Det er en arkiv-inspirert illustrasjon, ikke et historisk foto eller dokumentasjon på siste observasjonssted. Den leverte politilogoen ligger lokalt i `assets/police-logo.png`, brukes i toppfelt og saksfil og lagres for frakoblet bruk.
 
@@ -88,6 +88,33 @@ Nye versjoner installeres i bakgrunnen når det er nett. En ny service worker er
 
 Appen bruker cache-first for en stabil opplevelse. En vanlig oppdatering av siden tvinger derfor ikke gjennom nytt innhold. Ved feilsøking på utviklermaskin kan service worker avregistreres og appens `sak013-*`-cache slettes i nettleserens utviklerverktøy. Ikke gjør dette på en iPad som må fungere uten nett.
 
+## Venterom for smartboard
+
+Åpne **https://tofu-pup.github.io/halloween/venterom/** på smartboardet. Lokalt: **http://127.0.0.1:4173/halloween/venterom/**. Siden er laget for 16:9, bruker den eksisterende politilogoen og broillustrasjonen, og viser ingen løsninger. iPad-opplevelsen ligger fortsatt på **https://tofu-pup.github.io/halloween/**.
+
+1. Skjermen starter på **GRUPPE 1 – KLAR TIL START**, uten aktiv nedtelling.
+2. Trykk **SEND UT GRUPPE 1**. Gruppe 2 vises med **05:00** igjen. Utsendelsesknappen er låst mens tiden går.
+3. Ved **00:00** blir neste gruppe klar. En voksen må trykke for å sende den ut og starte et nytt intervall. Ingen grupper sendes ut automatisk.
+4. Etter gruppe 5 blir **ALLE GRUPPER ER SENDT UT / ETTERFORSKNINGEN PÅGÅR** stående.
+
+Tannhjulet øverst til høyre åpner **Voksenkontroll**:
+
+- **Antall grupper / minutter mellom gruppene:** standard 5 og 5. Endres før første utsendelse og låses deretter, også etter sideoppdatering. Nullstill sekvensen for å justere.
+- **Lyd:** av som standard. Kan aktiveres underveis; gir ett kort, lavmælt varsel når en gruppe blir klar. Det er ingen kontinuerlig lyd. Etter oppdatering må en voksen trykke i vinduet igjen før nettleseren tillater lyd.
+- **Tillat tidligere utsendelse:** krever egen bekreftelse og aktiverer bare utsendelsesknappen for den nåværende gruppen. Nedtellingen fortsetter. Gruppen går først når en voksen trykker på hovedknappen; neste intervall begynner fra det faktiske utsendelsestidspunktet.
+- **Nullstill utsendelsene:** krever bekreftelse, fjerner alle utsendelsestidspunkter og pågående nedtelling, og går til gruppe 1. Antall grupper, intervall og lydvalg beholdes. Ingen iPad-data slettes.
+- **Åpne fullskjerm:** bruk denne eller nettleserens fullskjermvalg, for eksempel F11 på Windows.
+
+### Frakoblet bruk, lagring og isolasjon
+
+Vent på **KLAR UTEN NETT** nederst og prøv en oppdatering uten nett før arrangementet. Venterommet har sin egen service worker med scope `/halloween/venterom/`, egen cache `blodlopet-venterom-cache-v1` og én lagringsnøkkel: `blodlopet-venterom-v1`. Nåværende gruppe beregnes fra listen over lagrede utsendelser. Tidspunkter, frist, unntak og innstillinger bevares etter oppdatering. Utløpt frist blir klar til start, ikke automatisk utsendelse.
+
+Nedtellingen sammenligner lagret frist med enhetens klokke, ikke antall intervalloppdateringer. Den tar derfor igjen tid brukt i en inaktiv fane eller et lukket vindu. Bruk **ett venteromsvindu**, la systemklokken stå uendret og unngå at smartboardet går i dvale under visningen. Privat nettlesing, slettede nettstedsdata og lite lagringsplass kan hindre gjenoppretting eller fjerne frakoblede filer. Lagringsfeil varsles tydelig; ikke lukk vinduet hvis lagring feiler.
+
+Siden importerer ingen kode fra iPad-appen og endrer aldri `sak013.*`-lagring. Stiler, timer, lyd og reset er selvstendige i `venterom/`. Den eneste endringen i iPad-service workeren er en ruteavgrensning: den lar `/venterom/` håndteres av den nye siden i stedet for å sende navigasjonen tilbake til saksmappen. Cacheversjonen økes til `sak013-v7`; iPad-cache og eksisterende oppdateringsstrategi beholdes ellers. Pages-arbeidsflyten kopierer den nye mappen, og den lokale serveren støtter mappens `index.html`. Spillet krever fortsatt ingen bygging eller nye pakker.
+
+**Hvis denne nettleseren allerede har en gammel iPad-service worker:** åpne iPad-appens rotadresse på nett, la oppdateringen laste ned, lukk alle appfaner/vinduer og åpne deretter venteromsadressen. Eldre service workere kan ellers vise saksmappen ved første besøk. Ikke oppdater en iPad midt i en gruppes finale. Senere venteromsoppdateringer øker bare cacheversjonen i `venterom/sw.js`; aktive venterom oppdateres først når alle venteromsfaner er lukket.
+
 ## Automatiske kontroller
 
 Spillet krever ingen bygging eller npm-avhengigheter. Playwright brukes bare til utviklingskontroller:
@@ -100,3 +127,5 @@ npm test
 ```
 
 Testene kjører mot samme `/halloween/`-sti som Pages. De dekker lokal hurtigbuffer, frakoblet gjennomspilling og replay, svarnormalisering, feil svar, oppdatering, nullstilling, voksenstyrt finale, lyd, redusert bevegelse, lagringsfeil og mobil-/iPad-bredder. Chromium-testene måler det faktiske lydsignalet og dekker avbrudd og ny oppstart. En separat oppstartstest i Chromium og WebKit kontrollerer at mediekanalen velges før lydmotoren opprettes, med et simulert lyd-API: Windows-utgaven av Playwright WebKit har ikke Web Audio. Dette erstatter ikke testing av faktisk lyd på iPhone/iPad. Testserveren starter automatisk. For å regenerere de inkluderte PNG-ikonene: `npm run generate:icons`.
+
+`tests/venterom.spec.js` dekker femgruppesekvensen, tidsberegning, gjenoppretting, dobbelttrykk, innstillinger, bekreftet tidlig utsendelse, nullstilling, lydvalg, 16:9-format og samtidig frakoblet bruk med iPad-appen. Kjør bare disse med `npm test -- --project=chromium tests/venterom.spec.js`.

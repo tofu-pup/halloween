@@ -31,6 +31,7 @@ jobs:
           mkdir -p _site
           cp index.html styles.css app.js case.config.js sw.js manifest.webmanifest _site/
           cp -R assets _site/assets
+          cp -R venterom _site/venterom
           touch _site/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

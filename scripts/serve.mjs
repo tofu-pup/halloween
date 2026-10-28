@@ -25,12 +25,21 @@ createServer(async (request, response) => {
       return;
     }
     const relative = decodeURIComponent(url.pathname.slice("/halloween/".length));
-    const file = resolve(root, relative || "index.html");
+    let file = resolve(root, relative || "index.html");
     if (!file.startsWith(root + sep) || relative.split(/[\\/]/).some((part) => part.startsWith("."))) {
       response.writeHead(403).end("Forbidden");
       return;
     }
-    if (!(await stat(file)).isFile()) {
+    let info = await stat(file);
+    if (info.isDirectory()) {
+      if (!url.pathname.endsWith("/")) {
+        response.writeHead(302, { Location: `${url.pathname}/${url.search}` }).end();
+        return;
+      }
+      file = resolve(file, "index.html");
+      info = await stat(file);
+    }
+    if (!info.isFile()) {
       response.writeHead(404).end("Not found");
       return;
     }

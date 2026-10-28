@@ -9,7 +9,7 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "check": "node --check app.js && node --check case.config.js && node --check sw.js"
+    "check": "node --check app.js && node --check case.config.js && node --check sw.js && node --check venterom/app.js && node --check venterom/state.js && node --check venterom/sw.js && node --check scripts/serve.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0"

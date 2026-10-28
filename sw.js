@@ -1,5 +1,5 @@
 // Bump this version whenever a shipped app file or case.config.js changes.
-const CACHE = "sak013-v6";
+const CACHE = "sak013-v7";
 const PREFIX = "sak013-";
 const ASSETS = [
   "./",
@@ -35,6 +35,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
+  // The standalone waiting room owns its navigation and offline cache.
+  const waitingRoomPath = new URL("./venterom/", self.registration.scope).pathname;
+  if (url.pathname === waitingRoomPath.slice(0, -1) || url.pathname.startsWith(waitingRoomPath)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     // Every in-scope navigation opens the archive, including home-screen launches.
