@@ -199,7 +199,7 @@ test("waiting-room and iPad caches, navigation and storage remain isolated offli
   await room.locator("#confirm-reset").click();
   expect(await room.evaluate(() => [localStorage.getItem("sak013.progress.v1"), localStorage.getItem("sak013.settings.v1")])).toEqual(ipadState);
   const caches = await room.evaluate(() => window.caches.keys());
-  expect(caches).toContain("blodlopet-venterom-cache-v1");
+  expect(caches).toContain("blodlopet-venterom-cache-v2");
   expect(caches.some((key) => key.startsWith("sak013-"))).toBe(true);
   const registrations = await room.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).map((registration) => new URL(registration.scope).pathname));
   expect(registrations.sort()).toEqual(["/halloween/", "/halloween/venterom/"]);
@@ -208,6 +208,7 @@ test("waiting-room and iPad caches, navigation and storage remain isolated offli
   await expect(room.locator("#group-title")).toHaveText("GRUPPE 1");
   await expect(room.locator("#offline-status")).toHaveText("KLAR UTEN NETT");
   await expect(room.locator(".police-logo")).toHaveJSProperty("naturalWidth", 1999);
+  await expect(room.locator(".race-bib img")).toHaveJSProperty("naturalWidth", 1417);
   await room.locator("#depart-group").click();
   await room.reload();
   await expect(room.locator("#group-title")).toHaveText("GRUPPE 2");
@@ -245,9 +246,32 @@ test("waiting-room storage failures are explicit and do not stop the display", a
       return setItem.call(this, key, value);
     };
   });
+
   await ready(page);
   await page.locator("#depart-group").click();
   await expect(page.locator("#storage-warning")).toContainText("Fremdriften kan ikke lagres");
   await expect(page.locator("#group-title")).toHaveText("GRUPPE 2");
+  await expect(page.locator("#depart-group")).toBeDisabled();
+});
+
+test("waiting-room atmosphere stays outside the countdown and respects reduced motion", async ({ page }) => {
+  await ready(page);
+  await expect(page.locator(".race-bib img")).toBeVisible();
+  await expect(page.locator(".race-bib img")).toHaveJSProperty("naturalWidth", 1417);
+  await page.locator("#depart-group").click();
+  for (const viewport of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }, { width: 1280, height: 720 }, { width: 3840, height: 2160 }]) {
+    await page.setViewportSize(viewport);
+    const bib = await page.locator(".race-bib").boundingBox();
+    const timer = await page.locator("#countdown").boundingBox();
+    const button = await page.locator("#depart-group").boundingBox();
+    expect(bib.x).toBeGreaterThan(timer.x + timer.width);
+    expect(bib.x).toBeGreaterThan(button.x + button.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+  }
+  await expect(page.locator(".mist-near")).toHaveCSS("animation-name", "mist-drift");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const selector of [".mist-near", ".mist-far", ".archive-scan", ".race-bib", ".status-dot"]) {
+    await expect(page.locator(selector)).toHaveCSS("animation-name", "none");
+  }
   await expect(page.locator("#depart-group")).toBeDisabled();
 });

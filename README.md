@@ -92,6 +92,8 @@ Appen bruker cache-first for en stabil opplevelse. En vanlig oppdatering av side
 
 Åpne **https://tofu-pup.github.io/halloween/venterom/** på smartboardet. Lokalt: **http://127.0.0.1:4173/halloween/venterom/**. Siden er laget for 16:9, bruker den eksisterende politilogoen og broillustrasjonen, og viser ingen løsninger. iPad-opplevelsen ligger fortsatt på **https://tofu-pup.github.io/halloween/**.
 
+Startnummer 13 vises som et dempet arkivobjekt til høyre, sammen med langsomt drivende dis og en svak skannelinje over bildet. Bevegelsene berører ikke nedtellingen eller knappene, har ingen blink og slås av når enheten ber om redusert bevegelse. Det leverte startnummerbildet ligger lokalt i `venterom/race-bib-13.png` og lagres for frakoblet bruk.
+
 1. Skjermen starter på **GRUPPE 1 – KLAR TIL START**, uten aktiv nedtelling.
 2. Trykk **SEND UT GRUPPE 1**. Gruppe 2 vises med **05:00** igjen. Utsendelsesknappen er låst mens tiden går.
 3. Ved **00:00** blir neste gruppe klar. En voksen må trykke for å sende den ut og starte et nytt intervall. Ingen grupper sendes ut automatisk.
@@ -107,7 +109,7 @@ Tannhjulet øverst til høyre åpner **Voksenkontroll**:
 
 ### Frakoblet bruk, lagring og isolasjon
 
-Vent på **KLAR UTEN NETT** nederst og prøv en oppdatering uten nett før arrangementet. Venterommet har sin egen service worker med scope `/halloween/venterom/`, egen cache `blodlopet-venterom-cache-v1` og én lagringsnøkkel: `blodlopet-venterom-v1`. Nåværende gruppe beregnes fra listen over lagrede utsendelser. Tidspunkter, frist, unntak og innstillinger bevares etter oppdatering. Utløpt frist blir klar til start, ikke automatisk utsendelse.
+Vent på **KLAR UTEN NETT** nederst og prøv en oppdatering uten nett før arrangementet. Venterommet har sin egen service worker med scope `/halloween/venterom/`, egen cache `blodlopet-venterom-cache-v2` og én lagringsnøkkel: `blodlopet-venterom-v1`. Nåværende gruppe beregnes fra listen over lagrede utsendelser. Tidspunkter, frist, unntak og innstillinger bevares etter oppdatering. Utløpt frist blir klar til start, ikke automatisk utsendelse.
 
 Nedtellingen sammenligner lagret frist med enhetens klokke, ikke antall intervalloppdateringer. Den tar derfor igjen tid brukt i en inaktiv fane eller et lukket vindu. Bruk **ett venteromsvindu**, la systemklokken stå uendret og unngå at smartboardet går i dvale under visningen. Privat nettlesing, slettede nettstedsdata og lite lagringsplass kan hindre gjenoppretting eller fjerne frakoblede filer. Lagringsfeil varsles tydelig; ikke lukk vinduet hvis lagring feiler.
 

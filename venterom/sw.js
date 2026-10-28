@@ -1,4 +1,4 @@
-const CACHE = "blodlopet-venterom-cache-v1";
+const CACHE = "blodlopet-venterom-cache-v2";
 const PREFIX = "blodlopet-venterom-cache-";
 const ASSETS = [
   "./",
@@ -6,6 +6,7 @@ const ASSETS = [
   "./styles.css",
   "./app.js",
   "./state.js",
+  "./race-bib-13.png",
   "../assets/icon.svg",
   "../assets/police-logo.png",
   "../assets/bridge.png",
