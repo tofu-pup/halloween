@@ -131,6 +131,30 @@ function tone(frequency = 196, duration = 1.2, volume = .18, type = "triangle") 
   }
 }
 
+function raceBeep(final = false) {
+  if (!audioReady || document.hidden || audioContext?.state !== "running") return;
+  const oscillator = audioContext.createOscillator();
+  const envelope = audioContext.createGain();
+  const now = audioContext.currentTime;
+  const duration = final ? .8 : .18;
+  oscillator.type = "sine";
+  oscillator.frequency.value = final ? 880 : 660;
+  envelope.gain.setValueAtTime(0, now);
+  envelope.gain.linearRampToValueAtTime(.22, now + .01);
+  envelope.gain.setValueAtTime(.22, now + duration - .04);
+  envelope.gain.linearRampToValueAtTime(0, now + duration);
+  oscillator.connect(envelope);
+  envelope.connect(masterGain);
+  activeTones.add(oscillator);
+  oscillator.onended = () => {
+    activeTones.delete(oscillator);
+    oscillator.disconnect();
+    envelope.disconnect();
+  };
+  oscillator.start(now);
+  oscillator.stop(now + duration);
+}
+
 async function activateSound() {
   if (document.hidden) return false;
   if (audioReady && audioContext?.state === "running") return true;
@@ -188,6 +212,7 @@ function stopSound() {
 function showScreen(screen, focus = true) {
   if (screens.indexOf(screen) > 1 && !state.answers.every((answer, i) => acceptsAnswer(answer, config.clues[i]))) screen = "investigation";
   runId++;
+  clearFinalCountdown();
   waitingForFinale = false;
   state.screen = screen;
   for (const id of screens) $(id).hidden = id !== screen;
@@ -420,7 +445,27 @@ async function finishReport(token) {
   $("revelation-warning").textContent = config.revelation.warning;
   tone(185, 2.5, .18);
   if (!await delay(config.revelation.warningDuration, token)) return;
-  if (!settings.manualFinale) showScreen("finale");
+  if (!settings.manualFinale) startFinalCountdown(token);
+}
+
+function clearFinalCountdown() {
+  $("final-countdown").hidden = true;
+  $("final-countdown-number").textContent = "";
+  document.body.classList.remove("countdown-active");
+}
+
+async function startFinalCountdown(token) {
+  for (const number of [3, 2, 1]) {
+    // Wait for a visible, unpaused frame before each cue, including manual starts.
+    if (!await delay(0, token)) return;
+    $("final-countdown").hidden = false;
+    document.body.classList.add("countdown-active");
+    $("final-countdown-number").textContent = number;
+    raceBeep();
+    if (!await delay(config.revelation.countdownInterval, token)) return;
+  }
+  showScreen("finale");
+  raceBeep(true);
 }
 
 function openSupervisor() {
@@ -441,6 +486,7 @@ function skipAnimation() {
     showScreen("revelation");
   } else if (screen === "revelation") {
     const token = ++runId;
+    clearFinalCountdown();
     completeReport();
     finishReport(token);
   }
@@ -481,10 +527,19 @@ document.addEventListener("keydown", (event) => {
 $("supervisor-open").addEventListener("click", openSupervisor);
 $("supervisor-close").addEventListener("click", closeSupervisor);
 $("skip-animation").addEventListener("click", skipAnimation);
-$("show-finale").addEventListener("click", () => { closeSupervisor(); showScreen("finale"); });
+$("show-finale").addEventListener("click", () => {
+  closeSupervisor();
+  clearFinalCountdown();
+  startFinalCountdown(++runId);
+});
 $("manual-finale").addEventListener("change", () => {
   settings.manualFinale = $("manual-finale").checked;
   save();
+  if (state.screen === "revelation" && settings.manualFinale && !$("final-countdown").hidden) {
+    runId++;
+    clearFinalCountdown();
+    $("revelation-warning").textContent = "Sluttrapporten er komplett.";
+  }
   if (state.screen === "revelation" && waitingForFinale && !settings.manualFinale) finishReport(++runId);
 });
 $("request-reset").addEventListener("click", () => { $("supervisor-dialog").close(); $("reset-dialog").showModal(); });

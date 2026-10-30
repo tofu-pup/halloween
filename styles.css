@@ -294,6 +294,9 @@ dialog .supervisor-offline { font: 15px/1.7 var(--mono); color: #b8c5a5; margin-
 .finale-screen { padding: 95px 5% 80px; }
 .finale-screen h2 { font-size: clamp(90px, min(18vw, 27svh), 230px); margin: 10px 0 30px; }
 .finale-identity { position: relative; margin: 0; min-height: 2.8em; max-width: 100%; font: bold clamp(22px, 3.2vw, 42px)/1.4 var(--mono); color: #e4d7bf; overflow-wrap: anywhere; }
+.final-countdown { position: fixed; inset: 0; z-index: 15; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 100px 5%; background: #0d0b09; text-align: center; pointer-events: none; }
+.final-countdown-number { margin: 0; color: #e4d7bf; font: bold clamp(130px, min(30vw, 45svh), 340px)/1 var(--mono); }
+body.countdown-active .masthead, body.countdown-active .app-footer { position: relative; z-index: 20; }
 @media (min-width: 900px) and (min-height: 600px) {
   .final-document { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0 30px; padding: 24px; }
   .document-logo { width: 180px; margin-bottom: 12px; }

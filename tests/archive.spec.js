@@ -174,6 +174,7 @@ test("adult controls pause the sequence, skip safely, hold the final cue and res
   await page.screenshot({ path: "test-results/case-file-ipad.png", fullPage: true });
   await supervisor(page);
   await page.locator("#show-finale").click();
+  await page.clock.runFor(3500);
   await expect(page.locator("#finale")).toBeVisible();
   await supervisor(page);
   await page.locator("#request-reset").click();
@@ -192,6 +193,84 @@ test("adult controls pause the sequence, skip safely, hold the final cue and res
   for (let i = 0; i < 4; i++) await expect(page.locator(`#answer-${i}`)).toHaveValue("");
   await supervisor(page);
   await expect(page.locator("#manual-finale")).toBeChecked();
+});
+
+test("race-start countdown beeps in order, pauses for supervision and resets safely offline", async ({ page, context }) => {
+  await page.addInitScript(() => {
+    window.__raceCues = [];
+    const createOscillator = AudioContext.prototype.createOscillator;
+    AudioContext.prototype.createOscillator = function () {
+      const oscillator = createOscillator.call(this);
+      const start = oscillator.start.bind(oscillator);
+      oscillator.start = (...args) => {
+        if ([660, 880].includes(oscillator.frequency.value)) {
+          window.__raceCues.push({
+            frequency: oscillator.frequency.value,
+            number: document.getElementById("final-countdown-number").textContent,
+            finale: !document.getElementById("finale").hidden,
+          });
+        }
+        return start(...args);
+      };
+      return oscillator;
+    };
+  });
+  await ready(page);
+  await context.setOffline(true);
+  await solve(page);
+  await supervisor(page);
+  await page.locator("#manual-finale").check();
+  await page.locator("#supervisor-close").click();
+  await page.locator("#unlock-case").click();
+  await supervisor(page);
+  await page.locator("#skip-animation").click();
+  await supervisor(page);
+  await page.locator("#skip-animation").click();
+  await page.clock.install();
+  await supervisor(page);
+  await page.locator("#show-finale").click();
+  await page.clock.runFor(100);
+  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  await expect(page.locator("#finale")).toBeHidden();
+  await supervisor(page);
+  await page.clock.runFor(5000);
+  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  expect(await page.evaluate(() => window.__raceCues.length)).toBe(1);
+  await page.locator("#supervisor-close").click();
+  await page.clock.runFor(1100);
+  await expect(page.locator("#final-countdown-number")).toHaveText("2");
+  await page.clock.runFor(1100);
+  await expect(page.locator("#final-countdown-number")).toHaveText("1");
+  await expect(page.locator("#finale")).toBeHidden();
+  await page.clock.runFor(1100);
+  await expect(page.locator("#finale")).toBeVisible();
+  expect(await page.evaluate(() => window.__raceCues)).toEqual([
+    { frequency: 660, number: "3", finale: false },
+    { frequency: 660, number: "2", finale: false },
+    { frequency: 660, number: "1", finale: false },
+    { frequency: 880, number: "", finale: true },
+  ]);
+  // Restart the countdown and cancel it before it can reveal the final screen.
+  await supervisor(page);
+  await page.locator("#request-reset").click();
+  await page.locator("#confirm-reset").click();
+  await solve(page);
+  await page.locator("#unlock-case").click();
+  await supervisor(page);
+  await page.locator("#skip-animation").click();
+  await supervisor(page);
+  await page.locator("#show-finale").click();
+  await page.clock.runFor(100);
+  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  await supervisor(page);
+  await page.locator("#request-reset").click();
+  await page.locator("#confirm-reset").click();
+  const cues = await page.evaluate(() => window.__raceCues.length);
+  await page.clock.runFor(10000);
+  await expect(page.locator("#welcome")).toBeVisible();
+  await expect(page.locator("#final-countdown")).toBeHidden();
+  await expect(page.locator("#finale")).toBeHidden();
+  expect(await page.evaluate(() => window.__raceCues.length)).toBe(cues);
 });
 
 test("two-second case-number hold opens discreet adult controls", async ({ page }) => {

@@ -1,5 +1,5 @@
 // Bump this version whenever a shipped app file or case.config.js changes.
-const CACHE = "sak013-v7";
+const CACHE = "sak013-v8";
 const PREFIX = "sak013-";
 const ASSETS = [
   "./",

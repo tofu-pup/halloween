@@ -56,6 +56,7 @@ export const CASE_CONFIG = {
     finalHold: 4000,
     warning: "KOBLING BEKREFTET",
     warningDuration: 2500,
+    countdownInterval: 1000,
     identityDelay: 2500,
     identity: "Ole Vik + 🦢 = OLE MAGNUS SVANEVIK",
   },

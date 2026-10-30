@@ -92,6 +92,10 @@
             <div class="report-end"><span>SLUTT PÅ RAPPORT</span><span>013</span></div>
           </div>
           <div id="revelation-warning" class="revelation-warning" aria-live="polite"></div>
+          <div id="final-countdown" class="final-countdown" hidden>
+            <p class="eyebrow">MOTTAK AV SISTE SIGNAL</p>
+            <p id="final-countdown-number" class="final-countdown-number" role="timer" aria-label="Nedtelling til siste signal"></p>
+          </div>
         </section>
 
         <section id="finale" class="screen finale-screen" aria-labelledby="finale-title" hidden>
@@ -120,6 +124,7 @@
         <label class="checkbox-row"><input id="manual-finale" type="checkbox"><span>Styr siste beskjed manuelt<small>Rapporten venter til en voksen trykker «Vis siste beskjed» her.</small></span></label>
         <button id="skip-animation" class="secondary-button" disabled>Hopp over animasjonen</button>
         <button id="show-finale" class="secondary-button" disabled>Vis siste beskjed</button>
+        <p class="sound-help">Siste beskjed starter med 3–2–1 og tre korte pip. På det lange startpipet vises «SE BAK DERE».</p>
       </div>
       <p id="supervisor-offline" class="supervisor-offline">Kontrollerer frakoblet tilgjengelighet …</p>
       <div class="reset-area"><span>KLAR FOR NESTE GRUPPE?</span><button id="request-reset" class="danger-button">Nullstill saken</button></div>
