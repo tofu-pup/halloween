@@ -62,12 +62,18 @@
         </section>
 
         <section id="investigation" class="screen investigation-screen" aria-labelledby="investigation-title" hidden>
-          <div class="section-heading">
+          <div id="investigation-heading" class="section-heading">
             <div><div class="eyebrow">SAKSMAPPE 013 / IDENTITETSKONTROLL</div><h2 id="investigation-title" tabindex="-1">Hva fant dere der ute?</h2><p>Bruk notatene deres.</p></div>
             <div class="progress-summary"><span id="solved-count">0</span><span>/ 04<br>SPOR BEKREFTET</span></div>
           </div>
           <div id="clue-list" class="clue-list"></div>
-          <div id="unlock-ready" class="unlock-ready" hidden><div><span class="eyebrow">ALLE FIRE SPOR BEKREFTET</span><p>SAK 013 – TILGANG GODKJENT</p></div><button id="unlock-case" class="primary-button"><span>ÅPNE SLUTTRAPPORTEN</span><span aria-hidden="true">↗</span></button></div>
+          <div id="unlock-ready" class="unlock-ready" hidden>
+            <span class="eyebrow">ALLE FIRE SPOR BEKREFTET</span>
+            <h2 id="unlock-title" tabindex="-1">Saksmappen er klar.</h2>
+            <p>SAK 013 – TILGANG GODKJENT</p>
+            <button id="unlock-case" class="primary-button"><span>ÅPNE SAKSMAPPEN</span><span aria-hidden="true">↗</span></button>
+            <p class="unlock-instruction">Trykk for å åpne den hemmelige saksfilen.</p>
+          </div>
         </section>
 
         <section id="decryption" class="screen decryption-screen" aria-labelledby="decryption-title" hidden>
@@ -92,10 +98,6 @@
             <div class="report-end"><span>SLUTT PÅ RAPPORT</span><span>013</span></div>
           </div>
           <div id="revelation-warning" class="revelation-warning" aria-live="polite"></div>
-          <div id="final-countdown" class="final-countdown" hidden>
-            <p class="eyebrow">MOTTAK AV SISTE SIGNAL</p>
-            <p id="final-countdown-number" class="final-countdown-number" role="timer" aria-label="Nedtelling til siste signal"></p>
-          </div>
         </section>
 
         <section id="finale" class="screen finale-screen" aria-labelledby="finale-title" hidden>
@@ -124,7 +126,7 @@
         <label class="checkbox-row"><input id="manual-finale" type="checkbox"><span>Styr siste beskjed manuelt<small>Rapporten venter til en voksen trykker «Vis siste beskjed» her.</small></span></label>
         <button id="skip-animation" class="secondary-button" disabled>Hopp over animasjonen</button>
         <button id="show-finale" class="secondary-button" disabled>Vis siste beskjed</button>
-        <p class="sound-help">Siste beskjed starter med 3–2–1 og tre korte pip. På det lange startpipet vises «SE BAK DERE».</p>
+        <p class="sound-help">Etter «NY IDENTITET FUNNET» høres tre korte pip mens rapporten blir stående. På det lange startpipet vises «SE BAK DERE».</p>
       </div>
       <p id="supervisor-offline" class="supervisor-offline">Kontrollerer frakoblet tilgjengelighet …</p>
       <div class="reset-area"><span>KLAR FOR NESTE GRUPPE?</span><button id="request-reset" class="danger-button">Nullstill saken</button></div>

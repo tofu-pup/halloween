@@ -195,7 +195,7 @@ test("adult controls pause the sequence, skip safely, hold the final cue and res
   await expect(page.locator("#manual-finale")).toBeChecked();
 });
 
-test("race-start countdown beeps in order, pauses for supervision and resets safely offline", async ({ page, context }) => {
+test("audio-only race cues follow the completed report, pause for supervision and reset safely offline", async ({ page, context }) => {
   await page.addInitScript(() => {
     window.__raceCues = [];
     const createOscillator = AudioContext.prototype.createOscillator;
@@ -206,7 +206,7 @@ test("race-start countdown beeps in order, pauses for supervision and resets saf
         if ([660, 880].includes(oscillator.frequency.value)) {
           window.__raceCues.push({
             frequency: oscillator.frequency.value,
-            number: document.getElementById("final-countdown-number").textContent,
+            report: document.querySelector("#identity-connection p:last-child")?.textContent,
             finale: !document.getElementById("finale").hidden,
           });
         }
@@ -226,29 +226,33 @@ test("race-start countdown beeps in order, pauses for supervision and resets saf
   await page.locator("#skip-animation").click();
   await supervisor(page);
   await page.locator("#skip-animation").click();
-  await page.clock.install();
+  await page.clock.install({ time: new Date("2026-10-31T18:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-31T18:00:01Z"));
   await supervisor(page);
   await page.locator("#show-finale").click();
   await page.clock.runFor(100);
-  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  await expect(page.locator("#identity-connection p").last()).toHaveText("NY IDENTITET FUNNET");
+  await expect(page.locator("#revelation")).toBeVisible();
+  await expect(page.locator("#final-countdown")).toHaveCount(0);
   await expect(page.locator("#finale")).toBeHidden();
   await supervisor(page);
   await page.clock.runFor(5000);
-  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  await expect(page.locator("#revelation")).toBeVisible();
   expect(await page.evaluate(() => window.__raceCues.length)).toBe(1);
   await page.locator("#supervisor-close").click();
   await page.clock.runFor(1100);
-  await expect(page.locator("#final-countdown-number")).toHaveText("2");
+  expect(await page.evaluate(() => window.__raceCues.length)).toBe(2);
   await page.clock.runFor(1100);
-  await expect(page.locator("#final-countdown-number")).toHaveText("1");
+  expect(await page.evaluate(() => window.__raceCues.length)).toBe(3);
+  await expect(page.locator("#identity-connection p").last()).toHaveText("NY IDENTITET FUNNET");
   await expect(page.locator("#finale")).toBeHidden();
   await page.clock.runFor(1100);
   await expect(page.locator("#finale")).toBeVisible();
   expect(await page.evaluate(() => window.__raceCues)).toEqual([
-    { frequency: 660, number: "3", finale: false },
-    { frequency: 660, number: "2", finale: false },
-    { frequency: 660, number: "1", finale: false },
-    { frequency: 880, number: "", finale: true },
+    { frequency: 660, report: "NY IDENTITET FUNNET", finale: false },
+    { frequency: 660, report: "NY IDENTITET FUNNET", finale: false },
+    { frequency: 660, report: "NY IDENTITET FUNNET", finale: false },
+    { frequency: 880, report: "NY IDENTITET FUNNET", finale: true },
   ]);
   // Restart the countdown and cancel it before it can reveal the final screen.
   await supervisor(page);
@@ -261,16 +265,48 @@ test("race-start countdown beeps in order, pauses for supervision and resets saf
   await supervisor(page);
   await page.locator("#show-finale").click();
   await page.clock.runFor(100);
-  await expect(page.locator("#final-countdown-number")).toHaveText("3");
+  await expect(page.locator("#revelation")).toBeVisible();
   await supervisor(page);
   await page.locator("#request-reset").click();
   await page.locator("#confirm-reset").click();
   const cues = await page.evaluate(() => window.__raceCues.length);
   await page.clock.runFor(10000);
   await expect(page.locator("#welcome")).toBeVisible();
-  await expect(page.locator("#final-countdown")).toBeHidden();
+  await expect(page.locator("#final-countdown")).toHaveCount(0);
   await expect(page.locator("#finale")).toBeHidden();
   expect(await page.evaluate(() => window.__raceCues.length)).toBe(cues);
+});
+
+test("all four verified answers leave only the open action, including after offline refresh and reset", async ({ page, context }) => {
+  await ready(page);
+  await context.setOffline(true);
+  await solve(page);
+  await expect(page.locator("#clue-list")).toBeHidden();
+  await expect(page.locator("#investigation-heading")).toBeHidden();
+  await expect(page.locator("#unlock-title")).toHaveText("Saksmappen er klar.");
+  await expect(page.locator("#unlock-case")).toBeFocused();
+  await expect(page.locator("#decryption")).toBeHidden();
+  await page.screenshot({ path: "test-results/unlock-ready-ipad.png", fullPage: true });
+  for (const viewport of [{ width: 1194, height: 834 }, { width: 1024, height: 768 }, { width: 390, height: 844 }, { width: 320, height: 740 }]) {
+    await page.setViewportSize(viewport);
+    const button = await page.locator("#unlock-case").boundingBox();
+    expect(button.x).toBeGreaterThanOrEqual(0);
+    expect(button.x + button.width).toBeLessThanOrEqual(viewport.width);
+    expect(button.y + button.height).toBeLessThan(viewport.height);
+    expect(button.height).toBeGreaterThanOrEqual(100);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await page.reload();
+  await expect(page.locator("#clue-list")).toBeHidden();
+  await expect(page.locator("#unlock-case")).toBeVisible();
+  await expect(page.locator("#decryption")).toBeHidden();
+  await supervisor(page);
+  await page.locator("#request-reset").click();
+  await page.locator("#confirm-reset").click();
+  await page.locator("#open-case").click();
+  await expect(page.locator("#clue-list")).toBeVisible();
+  await expect(page.locator("#investigation-heading")).toBeVisible();
+  await expect(page.locator("#unlock-ready")).toBeHidden();
 });
 
 test("two-second case-number hold opens discreet adult controls", async ({ page }) => {

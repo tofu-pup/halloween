@@ -14,6 +14,7 @@ let audioStarting;
 let noticeTimer;
 let holdTimer;
 let waitingForFinale = false;
+let finalCountdownActive = false;
 let settings = { manualFinale: false };
 let state = freshState();
 
@@ -225,7 +226,7 @@ function showScreen(screen, focus = true) {
   save();
   if (focus) {
     window.scrollTo(0, 0);
-    const heading = $(screen).querySelector("h1, h2");
+    const heading = screen === "investigation" && state.answers.every(Boolean) ? $("unlock-title") : $(screen).querySelector("h1, h2");
     if (heading && !document.querySelector("dialog[open]")) {
       heading.setAttribute("tabindex", "-1");
       heading.focus({ preventScroll: true });
@@ -306,8 +307,14 @@ function renderClues() {
 
 function updateProgress() {
   const count = state.answers.filter(Boolean).length;
+  const complete = count === config.clues.length;
   $("solved-count").textContent = String(count);
-  $("unlock-ready").hidden = count !== config.clues.length;
+  $("clue-list").hidden = complete;
+  $("investigation-heading").hidden = complete;
+  $("unlock-ready").hidden = !complete;
+  $("investigation").classList.toggle("ready-to-unlock", complete);
+  $("investigation").setAttribute("aria-labelledby", complete ? "unlock-title" : "investigation-title");
+  if (complete && state.screen === "investigation") window.scrollTo(0, 0);
 }
 
 // A suspended/background tab must not silently advance to the live scare.
@@ -449,18 +456,14 @@ async function finishReport(token) {
 }
 
 function clearFinalCountdown() {
-  $("final-countdown").hidden = true;
-  $("final-countdown-number").textContent = "";
-  document.body.classList.remove("countdown-active");
+  finalCountdownActive = false;
 }
 
 async function startFinalCountdown(token) {
-  for (const number of [3, 2, 1]) {
+  finalCountdownActive = true;
+  for (let cue = 0; cue < 3; cue++) {
     // Wait for a visible, unpaused frame before each cue, including manual starts.
     if (!await delay(0, token)) return;
-    $("final-countdown").hidden = false;
-    document.body.classList.add("countdown-active");
-    $("final-countdown-number").textContent = number;
     raceBeep();
     if (!await delay(config.revelation.countdownInterval, token)) return;
   }
@@ -475,7 +478,7 @@ function openSupervisor() {
 
 function closeSupervisor() {
   $("supervisor-dialog").close();
-  const heading = $(state.screen).querySelector("h1, h2");
+  const heading = state.screen === "investigation" && state.answers.every(Boolean) ? $("unlock-title") : $(state.screen).querySelector("h1, h2");
   if (heading) heading.focus({ preventScroll: true });
 }
 
@@ -530,12 +533,13 @@ $("skip-animation").addEventListener("click", skipAnimation);
 $("show-finale").addEventListener("click", () => {
   closeSupervisor();
   clearFinalCountdown();
+  completeReport();
   startFinalCountdown(++runId);
 });
 $("manual-finale").addEventListener("change", () => {
   settings.manualFinale = $("manual-finale").checked;
   save();
-  if (state.screen === "revelation" && settings.manualFinale && !$("final-countdown").hidden) {
+  if (state.screen === "revelation" && settings.manualFinale && finalCountdownActive) {
     runId++;
     clearFinalCountdown();
     $("revelation-warning").textContent = "Sluttrapporten er komplett.";
